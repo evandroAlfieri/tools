@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/png" href="./assets/favicon.png">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A collection of practical tools for everyday work.">
+  <title>My Tools</title>
+  <style>
+    :root{color-scheme:light;--ink:#20332d;--muted:#63736b;--accent:#2f6f5e;--border:#dce4de}
+    *{box-sizing:border-box}
+    body{margin:0;background:#f5f7f3;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}
+    main{max-width:1000px;margin:auto;padding:88px 24px 64px}
+    .eyebrow{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+    h1{font-size:clamp(36px,6vw,56px);line-height:1.1;letter-spacing:-.04em;margin:16px 0}
+    .intro{font-size:18px;color:var(--muted);margin:0 0 40px}
+    .tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+    .card{display:flex;flex-direction:column;padding:28px;border:1px solid var(--border);border-radius:16px;background:#fff;color:inherit;text-decoration:none;transition:transform .15s,border-color .15s,box-shadow .15s}
+    .card:hover{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 12px 28px #20332d0b}
+    .card:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
+    .icon{width:48px;height:48px;display:grid;place-items:center;border-radius:12px;background:#eaf2ec;color:var(--accent);margin-bottom:24px}
+    svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+    h2{font-size:22px;line-height:1.3;margin:0 0 12px;letter-spacing:-.02em}
+    .card p{color:var(--muted);font-size:15px;margin:0 0 28px}
+    .open{color:var(--accent);font-size:14px;font-weight:650;margin-top:auto;display:flex;align-items:center;gap:8px}
+    footer{color:var(--muted);font-size:13px;margin-top:40px;padding-top:20px;border-top:1px solid var(--border)}
+    @media(max-width:640px){main{padding:48px 20px}.tools{grid-template-columns:1fr}.card{padding:24px}}
+    @media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="eyebrow">Everyday utilities</div>
+      <h1>My Tools</h1>
+      <p class="intro">A few useful tools, all in one place.</p>
+    </header>
+    <nav class="tools" aria-label="Available tools">
+      <a class="card" href="./scorecards-summary-converter/">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13l1.5 1.5L12 12M8 18h8"/></svg></span>
+        <h2>Scorecards Summary Converter</h2>
+        <p>Turn raw scorecard exports into clear summaries. Review failing rules, edit Markdown, and export your report.</p>
+        <span class="open">Open converter <span aria-hidden="true">→</span></span>
+      </a>
+      <a class="card" href="./travel-expense-manager/">
+        <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M9 7v14M15 7v14"/></svg></span>
+        <h2>Travel Expense Manager</h2>
+        <p>Manage your travel expenses in one dedicated workspace.</p>
+        <span class="open">Open expense manager <span aria-hidden="true">→</span></span>
+      </a>
+    </nav>
+    <footer>Choose a tool to get started.</footer>
+  </main>
+</body>
+</html>
