@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scorecard Summary Converter</title>
+<style>
+  :root {
+    --bg: #f6f6f7;
+    --panel: #ffffff;
+    --border: #dcdde0;
+    --text: #1f2328;
+    --text-muted: #62666c;
+    --accent: #2f6f5e;
+    --accent-hover: #24564a;
+    --fail-bg: #fdf1f0;
+    --fail-border: #e6b3ae;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.45;
+  }
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .panel h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+  }
+  textarea {
+    width: 100%;
+    min-height: 160px;
+    resize: vertical;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fbfbfc;
+    color: var(--text);
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  button {
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:hover { background: #f0f0f1; }
+  button.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  button.primary:hover { background: var(--accent-hover); }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  input[type="file"] { display: none; }
+  .file-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    cursor: pointer;
+  }
+  .file-label:hover { background: #f0f0f1; }
+  .status {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+  .error {
+    color: #9b2c26;
+    font-size: 13.5px;
+    margin-top: 10px;
+    display: none;
+  }
+  #results { display: flex; flex-direction: column; gap: 16px; }
+  .block-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .block-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .block-title {
+    font-weight: 600;
+    font-size: 14.5px;
+  }
+  .block-meta {
+    font-size: 12.5px;
+    color: var(--text-muted);
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 10px 18px 0;
+  }
+  .tab {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: #f0f0f1;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .tab.active {
+    background: var(--panel);
+    color: var(--text);
+  }
+  .tab-panel {
+    display: none;
+    border-top: 1px solid var(--border);
+  }
+  .tab-panel.active { display: block; }
+  .tab-panel pre {
+    margin: 0;
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 480px;
+    overflow: auto;
+  }
+  .markdown-help { margin: 12px 18px 8px; font-size: 12px; color: var(--text-muted); }
+  .markdown-editor { display: block; width: calc(100% - 36px); margin: 0 18px 16px; min-height: 360px; line-height: 1.6; tab-size: 2; }
+  .markdown-editor:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .block-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 18px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .empty-state {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    text-align: center;
+    padding: 30px 10px;
+  }
+  .pv-body {
+    padding: 18px;
+    font-size: 13.5px;
+  }
+  .pv-h1 {
+    font-size: 16px;
+    margin: 0 0 10px;
+  }
+  .pv-meta {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    line-height: 1.7;
+  }
+  .pv-meta strong { color: var(--text); font-weight: 600; }
+  .pv-intro {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+  }
+  .pv-h2 {
+    font-size: 13.5px;
+    font-weight: 600;
+    margin: 20px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .certification-warning { padding: 12px 14px; border: 1px solid var(--fail-border); border-radius: 6px; background: var(--fail-bg); color: #9b2c26; }
+  .pv-body blockquote, .print-doc blockquote { margin: 14px 0; padding: 10px 14px; border-left: 3px solid var(--fail-border); background: var(--fail-bg); }
+  .pv-body blockquote p, .print-doc blockquote p { margin: 0; }
+  .pv-none { color: var(--text-muted); }
+  .pv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .pv-table th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pv-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #eeeeef;
+    vertical-align: middle;
+  }
+  .pv-table tr.sub-row td.sub-name {
+    color: var(--text-muted);
+    padding-left: 22px;
+  }
+  .see-details {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .badge-pass { background: #e4f3ec; color: #1e6b45; }
+  .badge-na { background: #eeeeef; color: #62666c; }
+  .badge-fail { background: var(--fail-bg); color: #9b2c26; }
+  .badge-warning { background: #fdf3e0; color: #8a5a00; }
+
+  #printArea { display: none; }
+  .print-doc { padding: 8px 4px; }
+  @media print {
+    body * { visibility: hidden; }
+    #printArea, #printArea * { visibility: visible; }
+    #printArea {
+      display: block;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      padding: 0;
+    }
+    .pv-table tr { page-break-inside: avoid; }
+  }
+  footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Scorecard Summary Converter</h1>
+  <p class="subtitle">Paste or upload a raw scorecard export. Get back the PASS / NOT SUPPORTED / FAILING summary, as text and Markdown.</p>
+
+  <div class="panel">
+    <h2>Source export</h2>
+    <textarea id="sourceInput" placeholder="Paste the raw scorecard export text here..."></textarea>
+    <div class="controls">
+      <label class="file-label" for="fileInput">Choose file…</label>
+      <input type="file" id="fileInput" accept=".txt">
+      <button class="primary" id="convertBtn">Convert</button>
+      <button id="clearBtn">Clear</button>
+      <span class="status" id="statusText"></span>
+    </div>
+    <div class="error" id="errorText"></div>
+  </div>
+
+  <div id="results">
+    <div class="empty-state">No results yet. Paste or upload an export, then click Convert.</div>
+  </div>
+
+  <footer>Runs entirely in your browser — nothing is uploaded anywhere.</footer>
+</div>
+
+<div id="printArea"></div>
+
+
+<script src="marked/marked.js"></script>
+<script>
+// ---------- Conversion logic ----------
+
+const STATUS_MAP = {
+  "pass": "PASS",
+  "not applicable": "NOT SUPPORTED",
+  "fail": "FAIL",
+  "warning": "WARNING",
+};
+
+const CANONICAL_FUNCTIONAL = [
+  ["ANN", "Annotations"],
+  ["ASM", "Assemblies"],
+  ["BLT", "Built elements"],
+  ["CLS", "Classification reference"],
+  ["CST", "Costing"],
+  ["CTR", "Constraints"],
+  ["CTX", "Presentation Colours & Textures"],
+  ["DOC", "Documentation reference"],
+  ["GEM", "Geometry representation"],
+  ["GRF", "Georeferencing"],
+  ["GRP", "Groups"],
+  ["LAY", "Presentation layer"],
+  ["LIB", "Library reference"],
+  ["MAT", "Materials"],
+  ["OJP", "Object placement"],
+  ["OJT", "Objects typing"],
+  ["PJS", "Project definition"],
+  ["POR", "Ports Connectivity & Nesting"],
+  ["POS", "Positioning elements"],
+  ["PSE", "Properties for object"],
+  ["QTY", "Quantities for objects"],
+  ["SDL", "Scheduling of activities"],
+  ["SPA", "Spaces"],
+  ["SPS", "Spatial breakdown"],
+  ["STR", "Structural items and actions"],
+  ["VER", "Versioning & Revision Control"],
+  ["VRT", "Virtual elements"],
+];
+
+const CANONICAL_SUBCATEGORIES = {
+  "GEM": [
+    ["ALS", "Alignment geometry"],
+    ["AXG", "Axis geometry"],
+    ["BBX", "Bounding box"],
+    ["BRP", "Boundary Representation (BREP)"],
+    ["CPD", "Clipped representations"],
+    ["CSG", "Constructive Solid Geometry (CSG)"],
+    ["MPD", "Mapped geometry"],
+    ["PBG", "Point-based geometry"],
+    ["RCO", "Relational constructs"],
+    ["SWE", "Sweeps (i.e. extrusions, lofts, blends)"],
+    ["TAS", "Tessellated (i.e. meshes)"],
+    ["TFM", "Transformations"],
+  ],
+  "OJP": [
+    ["GDP", "Grid placement"],
+    ["LIP", "Linear placement"],
+    ["LOP", "Local placement"],
+  ],
+  "POS": [
+    ["ALB", "Alignment"],
+    ["GRD", "Grid"],
+    ["RFT", "Referent"],
+  ],
+};
+
+const CATEGORY_CODE_RE = /^[A-Z]{2,}$/;
+const EQ_LINE_RE = /^=+$/;
+
+function splitBlocks(fullText) {
+  const lines = fullText.replace(/\r\n/g, "\n").split("\n");
+  const eqPositions = [];
+  lines.forEach((l, i) => {
+    const t = l.trim();
+    if (EQ_LINE_RE.test(t) && t.length >= 10) eqPositions.push(i);
+  });
+
+  const blocks = [];
+  let i = 0;
+  while (i + 1 < eqPositions.length) {
+    const start = eqPositions[i];
+    const headerEnd = eqPositions[i + 1];
+    const headerLines = lines.slice(start, headerEnd + 1);
+    const bodyStart = headerEnd + 1;
+    const bodyEnd = (i + 2 < eqPositions.length) ? eqPositions[i + 2] : lines.length;
+    const bodyLines = lines.slice(bodyStart, bodyEnd);
+    blocks.push({ headerLines, bodyLines });
+    i += 2;
+  }
+  return blocks;
+}
+
+function parseFailingRules(lines) {
+  const rules = [];
+  const path = [];
+  for (const raw of lines) {
+    const match = raw.match(/^(\s*)(.+?):\s*(.+)$/);
+    if (!match) continue;
+    const indent = match[1].replace(/\t/g, "    ").length;
+    const name = match[2].trim();
+    const value = match[3].trim();
+    while (path.length && path[path.length - 1].indent >= indent) path.pop();
+    const code = name.split(" ")[0];
+    if (CATEGORY_CODE_RE.test(code)) {
+      path.push({ indent, name });
+    } else if (/^fail(?:\s|$)/i.test(value)) {
+      const count = value.match(/\((\d+)\)/);
+      rules.push({ name, category: path.map(p => p.name).join(" / "), count: count ? count[1] : "—" });
+    }
+  }
+  return rules;
+}
+
+function markdownCell(value) {
+  return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\|/g, "&#124;").replace(/\r?\n/g, " ");
+}
+
+function rulesMarkdown(rules) {
+  return ["## Failing rules", "", ...(rules.length ? [
+    "| Rule | Category | Reported count |",
+    "|---|---|---|",
+    ...rules.map(r => `| ${markdownCell(r.name)} | ${markdownCell(r.category)} | ${r.count} |`)
+  ] : ["None"]), ""];
+}
+
+function normalizeSubs(subs, code) {
+  const canon = CANONICAL_SUBCATEGORIES[code];
+  if (!canon) return subs;
+
+  const byCode = {};
+  subs.forEach(s => { byCode[s.code] = s; });
+
+  const merged = [];
+  const seen = new Set();
+  for (const [c, n] of canon) {
+    seen.add(c);
+    if (byCode[c]) merged.push(byCode[c]);
+    else merged.push({ code: c, name: n, status: "not applicable" });
+  }
+  const extras = Object.keys(byCode)
+    .filter(c => !seen.has(c))
+    .sort()
+    .map(c => byCode[c]);
+  return merged.concat(extras);
+}
+
+function normalizeCategories(categories) {
+  const byCode = {};
+  categories.forEach(c => {
+    if (c.code !== "SYNTAX" && c.code !== "SCHEMA") byCode[c.code] = c;
+  });
+  const syntax = categories.find(c => c.code === "SYNTAX") || null;
+  const schema = categories.find(c => c.code === "SCHEMA") || null;
+  if (schema) schema.subs = [];
+
+  const merged = [];
+  const seen = new Set();
+  for (const [code, name] of CANONICAL_FUNCTIONAL) {
+    seen.add(code);
+    if (byCode[code]) merged.push(byCode[code]);
+    else merged.push({ code, name, status: "not applicable", subs: [] });
+  }
+  const extras = Object.keys(byCode)
+    .filter(code => !seen.has(code))
+    .sort()
+    .map(code => byCode[code]);
+  merged.push(...extras);
+
+  merged.forEach(cat => {
+    cat.subs = normalizeSubs(cat.subs, cat.code);
+  });
+
+  const result = [];
+  if (syntax) result.push(syntax);
+  if (schema) result.push(schema);
+  return result.concat(merged);
+}
+
+function parseBlock(headerLines, bodyLines) {
+  const info = {};
+  headerLines.forEach(line => {
+    if (line.includes(":") && !line.trim().startsWith("=")) {
+      const idx = line.indexOf(":");
+      const k = line.slice(0, idx).trim();
+      const v = line.slice(idx + 1).trim();
+      info[k] = v;
+    }
+  });
+
+  const categories = [];
+  let currentTop = null;
+
+  for (const raw of bodyLines) {
+    if (!raw.trim()) continue;
+    const indent = raw.length - raw.replace(/^ +/, "").length;
+    const level = Math.floor(indent / 4);
+    const content = raw.trim();
+    if (!content.includes(":")) continue;
+    const idx = content.indexOf(":");
+    const left = content.slice(0, idx).trim();
+    const right = content.slice(idx + 1).trim();
+
+    const spaceIdx = left.indexOf(" ");
+    const code = spaceIdx === -1 ? left : left.slice(0, spaceIdx);
+
+    if (!CATEGORY_CODE_RE.test(code)) continue; // leaf rule / fail-detail -> dropped
+
+    const name = spaceIdx === -1 ? code : left.slice(spaceIdx + 1);
+    const status = right.split(" (")[0].trim();
+
+    if (level === 0) {
+      currentTop = { code, name, status, subs: [] };
+      categories.push(currentTop);
+    } else if (level === 1) {
+      if (!currentTop) continue;
+      currentTop.subs.push({ code, name, status });
+    }
+    // level 2 = leaf under subcategory, already excluded above
+  }
+
+  if (categories.length === 0) {
+    return { info, categories: [] };
+  }
+  return { info, categories: normalizeCategories(categories) };
+}
+
+function label(code, name) {
+  if (code.toUpperCase() === name.toUpperCase()) return name;
+  if (name.toLowerCase().includes(`(${code})`.toLowerCase())) return name;
+  return `${name} (${code})`;
+}
+
+function renderCategoryBlockText(cat) {
+  const lines = [];
+  const expand = cat.subs.length > 0;
+  const suffix = expand ? " (see details below)" : "";
+  lines.push(`- ${label(cat.code, cat.name)}: ${STATUS_MAP[cat.status] || cat.status.toUpperCase()}${suffix}`);
+  cat.subs.forEach(sub => {
+    lines.push(`  - ${label(sub.code, sub.name)}: ${STATUS_MAP[sub.status] || sub.status.toUpperCase()}`);
+  });
+  lines.push("");
+  return lines;
+}
+
+const CERTIFICATION_WARNING = "Software certification cannot be completed until all reported errors have been resolved. See the Failing rules section at the end of this report for details.";
+
+function hasErrors(categories) {
+  return categories.some(cat => cat.status === "fail" || cat.subs.some(sub => sub.status === "fail"));
+}
+
+function renderText(headerLines, categories, rules = []) {
+  const out = [];
+  out.push(...headerLines);
+  out.push("");
+  out.push(
+    "Based on the IFC files observed as of the Last Data Refresh date indicated " +
+    "above, the following summarises the IFC features supported by the evaluated " +
+    "Application."
+  );
+  out.push("");
+  out.push("");
+
+  const passing = [];
+  const failing = [];
+
+  categories.forEach(cat => {
+    const block = renderCategoryBlockText(cat);
+    (cat.status === "fail" ? failing : passing).push(...block);
+  });
+
+  out.push("FAILING");
+  out.push("-------");
+  out.push("");
+  out.push(...(failing.length ? failing : ["None"]));
+  if (hasErrors(categories) || rules.length) out.push("", "WARNING: " + CERTIFICATION_WARNING, "");
+  out.push("", "PASSING or NOT SUPPORTED", "------------------------", "", ...passing, "");
+
+  out.push("FAILING RULES", "-------------", "", ...(rules.length ? rules.map(r => `- ${r.name} | ${r.category} | Reported count: ${r.count}`) : ["None"]), "");
+  return out.join("\n");
+}
+
+function renderCategoryRowsMd(cat) {
+  const rows = [];
+  const expand = cat.subs.length > 0;
+  const note = expand ? " *(see details below)*" : "";
+  rows.push(`| ${label(cat.code, cat.name)} | ${STATUS_MAP[cat.status] || cat.status.toUpperCase()}${note} |`);
+  cat.subs.forEach(sub => {
+    rows.push(`| &nbsp;&nbsp;↳ ${label(sub.code, sub.name)} | ${STATUS_MAP[sub.status] || sub.status.toUpperCase()} |`);
+  });
+  return rows;
+}
+
+function renderMarkdown(info, categories, rules = []) {
+  const out = [];
+  out.push("# Scorecard Summary");
+  out.push("");
+  Object.entries(info).forEach(([k, v]) => {
+    out.push(`**${k}:** ${v}  `);
+  });
+  out.push("");
+  out.push(
+    "Based on the IFC files observed as of the Last Data Refresh date indicated " +
+    "above, the following summarises the IFC features supported by the evaluated " +
+    "Application."
+  );
+  out.push("");
+
+  const passing = [];
+  const failing = [];
+  categories.forEach(cat => {
+    const rows = renderCategoryRowsMd(cat);
+    (cat.status === "fail" ? failing : passing).push(...rows);
+  });
+
+  out.push("");
+  out.push("## Failing");
+  out.push("");
+  if (!failing.length) {
+    out.push("None");
+  } else {
+    out.push("| Category | Status |");
+    out.push("|---|---|");
+    out.push(...failing);
+  }
+  out.push("");
+
+  if (hasErrors(categories) || rules.length) out.push("> **Warning:** " + CERTIFICATION_WARNING, "");
+  out.push("## Passing or Not Supported", "", "| Category | Status |", "|---|---|", ...passing, "");
+  out.push(...rulesMarkdown(rules));
+  return out.join("\n");
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function statusBadgeHtml(status) {
+  const text = STATUS_MAP[status] || status.toUpperCase();
+  const cls = status === "pass" ? "badge-pass"
+    : status === "fail" ? "badge-fail"
+    : status === "warning" ? "badge-warning"
+    : "badge-na";
+  return `<span class="badge ${cls}">${text}</span>`;
+}
+
+function pushCategoryRowsHtml(cat, rows) {
+  const expand = cat.subs.length > 0;
+  const note = expand ? ' <span class="see-details">(see details below)</span>' : "";
+  rows.push(`<tr><td>${escapeHtml(label(cat.code, cat.name))}</td><td>${statusBadgeHtml(cat.status)}${note}</td></tr>`);
+  cat.subs.forEach(sub => {
+    rows.push(`<tr class="sub-row"><td class="sub-name">↳ ${escapeHtml(label(sub.code, sub.name))}</td><td>${statusBadgeHtml(sub.status)}</td></tr>`);
+  });
+}
+
+function renderPreviewHtml(info, categories, rules = []) {
+  let html = "";
+  html += `<h1 class="pv-h1">Scorecard Summary</h1>`;
+  html += `<div class="pv-meta">`;
+  Object.entries(info).forEach(([k, v]) => {
+    html += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`;
+  });
+  html += `</div>`;
+  html += `<p class="pv-intro">Based on the IFC files observed as of the Last Data Refresh date indicated above, the following summarises the IFC features supported by the evaluated Application.</p>`;
+
+  html += `<h2 class="pv-h2">Failing</h2>`;
+  const failRows = [];
+  categories.forEach(cat => { if (cat.status === "fail") pushCategoryRowsHtml(cat, failRows); });
+  if (failRows.length === 0) {
+    html += `<p class="pv-none">None</p>`;
+  } else {
+    html += `<table class="pv-table"><thead><tr><th>Category</th><th>Status</th></tr></thead><tbody>${failRows.join("")}</tbody></table>`;
+  }
+  if (hasErrors(categories) || rules.length) html += `<blockquote class="certification-warning"><strong>Warning:</strong> ${CERTIFICATION_WARNING}</blockquote>`;
+  html += `<h2 class="pv-h2">Passing or Not Supported</h2>`;
+  const passRows = [];
+  categories.forEach(cat => { if (cat.status !== "fail") pushCategoryRowsHtml(cat, passRows); });
+  html += `<table class="pv-table"><thead><tr><th>Category</th><th>Status</th></tr></thead><tbody>${passRows.join("")}</tbody></table>`;
+
+  html += '<h2 class="pv-h2">Failing rules</h2>';
+  html += rules.length ? `<table class="pv-table"><thead><tr><th>Rule</th><th>Category</th><th>Reported count</th></tr></thead><tbody>${rules.map(r => `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td>${r.count}</td></tr>`).join("")}</tbody></table>` : '<p class="pv-none">None</p>';
+  return html;
+}
+
+function safeSlug(...parts) {
+  let s = parts.filter(Boolean).join("_");
+  s = s.replace(/[^\w\-.]+/g, "_");
+  return s.replace(/^_+|_+$/g, "");
+}
+
+function convertFullText(fullText) {
+  const blocks = splitBlocks(fullText);
+  const results = [];
+  blocks.forEach(({ headerLines, bodyLines }) => {
+    const { info, categories } = parseBlock(headerLines, bodyLines);
+    if (categories.length === 0) return; // empty block, skip
+
+    const rules = parseFailingRules(bodyLines);
+    const text = renderText(headerLines, categories, rules);
+    const md = renderMarkdown(info, categories, rules);
+
+    const vsv = info["Validation Service Version"] || "";
+    const schema = info["IFC Schema Version"] || "";
+    const selfiles = info["Selected File(s)"] || "";
+    const app = info["Application"] || "scorecard";
+
+    const fnameBase = safeSlug(app, `vsv${vsv}`, schema, `${selfiles}files`);
+    const previewHtml = renderPreviewHtml(info, categories, rules);
+    results.push({ info, text, md, previewHtml, fnameBase });
+  });
+  return results;
+}
+
+// ---------- UI wiring ----------
+
+const sourceInput = document.getElementById("sourceInput");
+const fileInput = document.getElementById("fileInput");
+const convertBtn = document.getElementById("convertBtn");
+const clearBtn = document.getElementById("clearBtn");
+const statusText = document.getElementById("statusText");
+const errorText = document.getElementById("errorText");
+const resultsEl = document.getElementById("results");
+
+fileInput.addEventListener("change", () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    sourceInput.value = reader.result;
+    statusText.textContent = `Loaded ${file.name}`;
+  };
+  reader.onerror = () => {
+    showError("Could not read that file. Try pasting the content instead.");
+  };
+  reader.readAsText(file);
+});
+
+clearBtn.addEventListener("click", () => {
+  sourceInput.value = "";
+  fileInput.value = "";
+  statusText.textContent = "";
+  hideError();
+  renderEmptyState();
+});
+
+convertBtn.addEventListener("click", () => {
+  hideError();
+  const text = sourceInput.value;
+  if (!text.trim()) {
+    showError("Paste or upload a source export first.");
+    return;
+  }
+  let results;
+  try {
+    results = convertFullText(text);
+  } catch (e) {
+    showError("Something went wrong while parsing this file. Check that it's an unmodified scorecard export.");
+    console.error(e);
+    return;
+  }
+  if (results.length === 0) {
+    showError("No valid scorecard blocks were found in this text. Check that this is a raw scorecard export.");
+    renderEmptyState();
+    return;
+  }
+  statusText.textContent = `${results.length} block${results.length > 1 ? "s" : ""} converted`;
+  renderResults(results);
+});
+
+function showError(msg) {
+  errorText.textContent = msg;
+  errorText.style.display = "block";
+}
+function hideError() {
+  errorText.style.display = "none";
+  errorText.textContent = "";
+}
+
+function renderEmptyState() {
+  resultsEl.innerHTML = '<div class="empty-state">No results yet. Paste or upload an export, then click Convert.</div>';
+}
+
+
+function renderEditedMarkdown(markdown) {
+  const template = document.createElement("template");
+  template.innerHTML = marked.parse(markdown, { gfm: true, breaks: true });
+  const allowed = new Set(["H1", "H2", "H3", "H4", "H5", "H6", "P", "BR", "HR", "STRONG", "EM", "DEL", "BLOCKQUOTE", "UL", "OL", "LI", "PRE", "CODE", "TABLE", "THEAD", "TBODY", "TR", "TH", "TD", "A"]);
+  for (const element of [...template.content.querySelectorAll("*")].reverse()) {
+    if (["SCRIPT", "STYLE", "IFRAME", "OBJECT", "EMBED", "SVG", "MATH"].includes(element.tagName)) {
+      element.remove();
+      continue;
+    }
+    if (!allowed.has(element.tagName)) {
+      element.replaceWith(...element.childNodes);
+      continue;
+    }
+    const href = element.getAttribute("href");
+    for (const attr of [...element.attributes]) element.removeAttribute(attr.name);
+    if (element.tagName === "A" && href && /^(https?:|mailto:|#)/i.test(href.trim())) {
+      element.setAttribute("href", href);
+      element.setAttribute("rel", "noopener noreferrer");
+    }
+    if (element.tagName === "TABLE") element.className = "pv-table";
+    if (element.tagName === "H1") element.className = "pv-h1";
+    if (element.tagName === "H2") element.className = "pv-h2";
+  }
+  // Restore scorecard styling after sanitizing the edited Markdown.
+  for (const cell of template.content.querySelectorAll("tbody td:nth-child(2)")) {
+    const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode);
+    for (const node of textNodes) {
+      const match = node.textContent.match(/^(\s*)(NOT SUPPORTED|WARNING|PASS|FAIL)(?=\s|$)/);
+      if (!match) continue;
+      const badge = document.createElement("span");
+      const classes = { PASS: "badge-pass", FAIL: "badge-fail", WARNING: "badge-warning", "NOT SUPPORTED": "badge-na" };
+      badge.className = "badge " + classes[match[2]];
+      badge.textContent = match[2];
+      node.replaceWith(document.createTextNode(match[1]), badge, document.createTextNode(node.textContent.slice(match[0].length)));
+      break;
+    }
+  }
+  for (const row of template.content.querySelectorAll("tbody tr")) {
+    const name = row.querySelector("td");
+    if (name && name.textContent.trim().startsWith("↳")) {
+      row.className = "sub-row";
+      name.className = "sub-name";
+    }
+  }
+  for (const quote of template.content.querySelectorAll("blockquote")) {
+    if (/^Warning:/i.test(quote.textContent.trim())) quote.className = "certification-warning";
+  }
+  return template.innerHTML;
+}
+
+function renderResults(results) {
+  resultsEl.innerHTML = "";
+  results.forEach((r, idx) => {
+    const info = r.info;
+    const card = document.createElement("div");
+    card.className = "block-card";
+
+    const metaBits = [];
+    if (info["Validation Service Version"]) metaBits.push(`Validation Service ${info["Validation Service Version"]}`);
+    if (info["IFC Schema Version"]) metaBits.push(info["IFC Schema Version"]);
+    if (info["Selected File(s)"]) metaBits.push(`${info["Selected File(s)"]} file(s)`);
+
+    card.innerHTML = `
+      <div class="block-head">
+        <div class="block-title">${escapeHtml(info["Application"] || "Scorecard")}${info["Company"] ? " — " + escapeHtml(info["Company"]) : ""}</div>
+        <div class="block-meta">${escapeHtml(metaBits.join(" · "))}</div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="text">Text</div>
+        <div class="tab" data-tab="md">Markdown</div>
+        <div class="tab" data-tab="preview">Preview</div>
+      </div>
+      <div class="tab-panel active" data-panel="text"><pre></pre></div>
+      <div class="tab-panel" data-panel="md"><p class="markdown-help">Edit Markdown below. Copy and Download .md include your changes. Preview and PDF update automatically. Text retains the original summary. Converting again replaces your edits.</p><textarea class="markdown-editor" aria-label="Edit Markdown summary" spellcheck="false"></textarea></div>
+      <div class="tab-panel" data-panel="preview"><div class="pv-body"></div></div>
+      <div class="block-actions">
+        <button data-action="copy">Copy</button>
+        <button data-action="download-txt">Download .txt</button>
+        <button data-action="download-md">Download .md</button>
+        <button data-action="export-pdf" title="Opens your browser's print dialog — choose &quot;Save as PDF&quot;">Export PDF</button>
+      </div>
+    `;
+
+    card.querySelector('[data-panel="text"] pre').textContent = r.text;
+    const markdownEditor = card.querySelector('[data-panel="md"] textarea');
+    markdownEditor.value = r.md;
+    markdownEditor.addEventListener("input", () => {
+      r.md = markdownEditor.value;
+      r.previewHtml = renderEditedMarkdown(r.md);
+      card.querySelector('[data-panel="preview"] .pv-body').innerHTML = r.previewHtml;
+    });
+    card.querySelector('[data-panel="preview"] .pv-body').innerHTML = r.previewHtml;
+
+    const tabs = card.querySelectorAll(".tab");
+    const panels = card.querySelectorAll(".tab-panel");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        panels.forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        card.querySelector(`[data-panel="${tab.dataset.tab}"]`).classList.add("active");
+      });
+    });
+
+    card.querySelector('[data-action="copy"]').addEventListener("click", (e) => {
+      const activeTab = card.querySelector(".tab.active").dataset.tab;
+      const content = activeTab === "text" ? r.text : r.md; // preview copies the markdown source
+      navigator.clipboard.writeText(content).then(() => {
+        const btn = e.target;
+        const original = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => { btn.textContent = original; }, 1200);
+      });
+    });
+
+    card.querySelector('[data-action="download-txt"]').addEventListener("click", () => {
+      downloadFile(r.fnameBase + ".txt", r.text, "text/plain");
+    });
+    card.querySelector('[data-action="download-md"]').addEventListener("click", () => {
+      downloadFile(r.fnameBase + ".md", r.md, "text/markdown");
+    });
+    card.querySelector('[data-action="export-pdf"]').addEventListener("click", () => {
+      exportPdf(r);
+    });
+
+    resultsEl.appendChild(card);
+  });
+}
+
+const printArea = document.getElementById("printArea");
+const DEFAULT_TITLE = document.title;
+
+function exportPdf(r) {
+  printArea.innerHTML = `<div class="print-doc">${r.previewHtml}</div>`;
+  document.title = r.fnameBase;
+  window.print();
+}
+
+window.addEventListener("afterprint", () => {
+  document.title = DEFAULT_TITLE;
+  printArea.innerHTML = "";
+});
+
+function downloadFile(filename, content, mime) {
+  const blob = new Blob([content], { type: mime + ";charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
