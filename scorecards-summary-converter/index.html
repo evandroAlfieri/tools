@@ -213,6 +213,8 @@
     color: var(--text-muted);
     margin-bottom: 18px;
   }
+  /* A heading directly above a table: its underline sits right on top of the table's header row (no white band). */
+  .pv-h2:has(+ table) { margin-bottom: 0; }
   .pv-h2 {
     font-size: 13.5px;
     font-weight: 600;
@@ -242,33 +244,61 @@
   .pv-table td {
     padding: 6px 8px;
     border-bottom: 1px solid #eeeeef;
-    vertical-align: middle;
+    vertical-align: baseline; /* first text line of every cell lines up, whatever its font size */
   }
   .pv-table tr.sub-row td.sub-name {
     color: var(--text-muted);
     padding-left: 22px;
   }
+  .cat-table { table-layout: fixed; }
+  .cat-table col.c-cat { width: 25%; }
+  .cat-table col.c-status { width: 11%; }
+  .cat-table col.c-desc { width: 64%; }
+  .pv-table td.desc { font-size: 12px; line-height: 1.45; color: #45484d; }
+  /* Status icon; its text label is visually hidden (kept for screen readers and copy-paste). */
+  .st { position: relative; display: inline-block; line-height: 1; white-space: nowrap; }
+  .st svg { display: inline-block; width: 16px; height: 16px; vertical-align: -3.08px; }
+  .st-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .pv-head { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; margin-bottom: 14px; }
+  .pv-head .pv-meta { margin-bottom: 0; }
+  .pv-legend { font-size: 12px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+  .pv-legend-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
+  .pv-legend-item { display: flex; align-items: flex-start; gap: 8px; margin-top: 5px; line-height: 1.4; }
+  .pv-table thead th { background: #e8eaed; color: #3c4043; border-bottom: 1px solid #d5d8dc; }
+  .pv-table tr.parent-row td { font-weight: 600; background: #f6f6f7; }
+  .pv-table tr.parent-row td.desc { font-weight: 400; }
+  .pv-note { font-size: 12px; color: var(--text-muted); font-style: italic; margin: 10px 0 0; }
+  .pv-note a { color: inherit; word-break: break-all; }
   .see-details {
+    display: block;
     font-size: 12px;
     color: var(--text-muted);
     font-style: italic;
   }
-  .badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 2px 8px;
-    border-radius: 10px;
-  }
-  .badge-pass { background: #e4f3ec; color: #1e6b45; }
-  .badge-na { background: #eeeeef; color: #62666c; }
-  .badge-fail { background: var(--fail-bg); color: #9b2c26; }
-  .badge-warning { background: #fdf3e0; color: #8a5a00; }
 
   #printArea { display: none; }
   .print-doc { padding: 8px 4px; }
-  @page { size: A4; margin: 18mm 16mm; }
+  /* Page setup for the PDF: landscape A4, buildingSMART logo top-left and "n of N" bottom-right on every page.
+     Margin boxes are rendered by Chrome/Edge when saving as PDF. */
+  @page {
+    size: A4 landscape;
+    margin: 24mm 14mm 14mm 14mm;
+    @top-left {
+      content: "";
+      width: 46mm;
+      height: 8.3mm;
+      margin-top: 7mm;
+      margin-bottom: 8.7mm;
+      background: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTA4LjA0IDE5OS4wNCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMxYzFjMWI7fS5jbHMtMSwuY2xzLTIsLmNscy0zLC5jbHMtNCwuY2xzLTV7c3Ryb2tlLXdpZHRoOjBweDt9LmNscy0ye2ZpbGw6IzlmMzU4Yjt9LmNscy0ze2ZpbGw6IzAwOWViMDt9LmNscy00e2ZpbGw6I2YwMDAyMzt9LmNscy01e2ZpbGw6IzAwNGY5Zjt9PC9zdHlsZT48L2RlZnM+PHBhdGggY2xhc3M9ImNscy01IiBkPSJtNDQuNzMsMTIyLjY2YzcuMzQsNy44LDE5LjYsOC4xNywyNy40LjgzbDI1LjUzLTI0LjAzLTE2LjI4LTE3LjMtMzkuNjQsMzcuMzEsMywzLjE4WiIvPjxwYXRoIGNsYXNzPSJjbHMtNSIgZD0ibTUuMjcsODAuNzRsMTYuMzQsMTcuMzYsMTcuMy0xNi4yOC0xMy4zNC0xNC4xOCw0My42LTQxLjA0LDQ5Ljc1LDUyLjg1LDMuMy0zLjExYzcuNzktNy4zNCw4LjE2LTE5LjYuODMtMjcuNEw4My41OSw3LjAyYy03LjM0LTcuOC0xOS42LTguMTctMjcuNC0uODNMNi4xLDUzLjM0Yy03LjgsNy4zNC04LjE3LDE5LjYtLjgzLDI3LjRaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJtMTIyLjY2LDE1NC4zMWM3Ljc5LTcuMzQsOC4xNy0xOS42LjgzLTI3LjRsLTI0LjAzLTI1LjUzLTE3LjMsMTYuMjgsMzcuMzEsMzkuNjQsMy4xOC0zWiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0ibTgwLjc0LDE5My43N2wxNy4zNi0xNi4zNC0xNi4yOC0xNy4zLTE0LjE4LDEzLjM0LTQxLjA0LTQzLjYsNTIuODUtNDkuNzUtMy4xMS0zLjNjLTcuMzQtNy44LTE5LjYtOC4xNy0yNy40LS44M0w3LjAyLDExNS40NWMtNy44LDcuMzQtOC4xNywxOS42LS44MywyNy40bDQ3LjE1LDUwLjA5YzcuMzQsNy43OSwxOS42LDguMTcsMjcuNC44M1oiLz48cGF0aCBjbGFzcz0iY2xzLTMiIGQ9Im0xNTQuMzEsNzYuMzhjLTcuMzQtNy44LTE5LjYtOC4xNy0yNy40LS44M2wtMjUuNTMsMjQuMDMsMTYuMjgsMTcuMywzOS42NC0zNy4zMS0zLTMuMThaIi8+PHBhdGggY2xhc3M9ImNscy0zIiBkPSJtMTkzLjc3LDExOC4zbC0xNi4zNC0xNy4zNi0xNy4zLDE2LjI4LDEzLjM0LDE0LjE3LTQzLjYxLDQxLjA0LTQ5Ljc1LTUyLjg1LTMuMywzLjExYy03Ljc5LDcuMzQtOC4xNywxOS42LS44MywyNy40bDM5LjQ2LDQxLjkyYzcuMzQsNy44LDE5LjYsOC4xNywyNy40LjgzbDUwLjA5LTQ3LjE1YzcuOC03LjM0LDguMTctMTkuNi44My0yNy40Ii8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJtNzYuMzgsNDQuNzNjLTcuOCw3LjM0LTguMTcsMTkuNi0uODMsMjcuNGwyNC4wMywyNS41MiwxNy4zLTE2LjI4LTM3LjMxLTM5LjY0LTMuMTgsM1oiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Im0xMTguMyw1LjI3bC0xNy4zNiwxNi4zNCwxNi4yOCwxNy4zLDE0LjE3LTEzLjM0LDQxLjA0LDQzLjYtNTIuODUsNDkuNzUsMy4xMSwzLjNjNy4zNCw3Ljc5LDE5LjYsOC4xNywyNy40LjgzbDQxLjkyLTM5LjQ2YzcuNzktNy4zNCw4LjE3LTE5LjYuODMtMjcuNEwxNDUuNyw2LjFjLTcuMzMtNy44LTE5LjYtOC4xNy0yNy40LS44MyIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTIyMS4zMSw5LjY5djY5LjQ1YzAsMTYuNSwxMS44NSwzMS42NSwyOC45NSwzMS42NSwxNC40LDAsMjguNjUtMTMuMzUsMjguNjUtMzEuNjVzLTE0LjI1LTMxLjY1LTI4LjY1LTMxLjY1Yy05LjQ1LDAtMTYuMDUsMy45LTIyLjIsMTAuMzV2LTYuNzVjNC4zNS0zLjYsMTEuMjUtOSwyMi4yLTksMTkuMzUsMCwzNC42NSwxNS42LDM0LjY1LDM3LjA1cy0xNS4zLDM3LjA1LTM0LjY1LDM3LjA1LTM0LjY1LTE1LjYtMzQuNjUtMzcuMDVWOS42OWg1LjdaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMzAwLjk1LDQzLjU5djQyLjZjMCwxNC44NSwxMC4zNSwyNC42LDIyLjgsMjQuNnMyMi44LTkuNzUsMjIuOC0yNC42di00Mi42aDUuN3Y0My4zNWMwLDE3LjU1LTEyLjYsMjkuMjUtMjguNSwyOS4yNXMtMjguNS0xMS43LTI4LjUtMjkuMjV2LTQzLjM1aDUuN1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im0zNzEuODksMTguOTljMi41NSwwLDQuNSwxLjk1LDQuNSw0LjVzLTEuOTUsNC41LTQuNSw0LjUtNC41LTEuOTUtNC41LTQuNSwxLjk1LTQuNSw0LjUtNC41Wm0tMi44NSw5NS43VjQzLjU5aDUuN3Y3MS4xaC01LjdaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMzkzLjQ4LDExNC42OVY5LjY5aDUuN3YxMDVoLTUuN1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im00ODAuNjEsOS42OXY2OS40NWMwLDIxLjQ1LTE1LjMsMzcuMDUtMzQuNjUsMzcuMDVzLTM0LjY1LTE1LjYtMzQuNjUtMzcuMDUsMTUuMy0zNy4wNSwzNC42NS0zNy4wNWMxMC45NSwwLDE3Ljg1LDUuNCwyMi4yLDl2Ni43NWMtNi4xNS02LjQ1LTEyLjc1LTEwLjM1LTIyLjItMTAuMzUtMTQuNCwwLTI4LjY1LDEzLjM1LTI4LjY1LDMxLjY1czE0LjI1LDMxLjY1LDI4LjY1LDMxLjY1YzE3LjEsMCwyOC45NS0xNS4xNSwyOC45NS0zMS42NVY5LjY5aDUuN1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im00OTkuODQsMTguOTljMi41NSwwLDQuNSwxLjk1LDQuNSw0LjVzLTEuOTUsNC41LTQuNSw0LjUtNC41LTEuOTUtNC41LTQuNSwxLjk1LTQuNSw0LjUtNC41Wm0tMi44NSw5NS43VjQzLjU5aDUuN3Y3MS4xaC01LjdaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtNTcwLjIsMTE0LjY5di00Mi42YzAtMTQuODUtMTAuMzUtMjQuNi0yMi44LTI0LjZzLTIyLjgsOS43NS0yMi44LDI0LjZ2NDIuNmgtNS43di00My4zNWMwLTE3LjU1LDEyLjYtMjkuMjUsMjguNS0yOS4yNXMyOC41LDExLjcsMjguNSwyOS4yNXY0My4zNWgtNS43WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTYwMy4zLDEzNy42MmM1LjQsMi4xLDEyLDMuNiwxOCwzLjYsMTkuMiwwLDMwLjc1LTguNywzMC43NS0zMy42di0yOC40OGMwLTE2LjUtMTEuODUtMzEuNjUtMjguOTUtMzEuNjUtMTQuNCwwLTI4LjY1LDEzLjM1LTI4LjY1LDMxLjY1czE0LjI1LDMxLjY1LDI4LjY1LDMxLjY1YzkuNDUsMCwxNi4wNS0zLjksMjIuMi0xMC4zNXY2Ljc1Yy00LjM1LDMuNi0xMS4yNSw5LTIyLjIsOS0xOS4zNSwwLTM0LjY1LTE1LjYtMzQuNjUtMzcuMDVzMTUuMy0zNy4wNSwzNC42NS0zNy4wNSwzNC42NSwxNS42LDM0LjY1LDM3LjA1djMyLjM4YzAsMjIuMi0xNSwzNS4xLTM1LjcsMzUuMS03LjA1LDAtMTMuOTUtMS4yLTIwLjU1LTMuNmwxLjgtNS40WiIvPjxwYXRoIGNsYXNzPSJjbHMtNCIgZD0ibTcxNC4wOSw1NS4xNGMtMTQuODYtNC4yMS0yNy42OS03Ljg1LTI3LjY5LTIxLjMsMC0xMS4yNCw2LjE5LTE2LjAzLDIwLjY4LTE2LjAzaDM3LjIyVjcuMjdoLTM5LjYyYy0xOC4zMywwLTI5LjcxLDkuOTUtMjkuNzEsMjUuOTcsMCwyMi43NSwxOC43NCwyNy45NCwzNS4yOCwzMi41MiwxNC43Miw0LjA4LDI4LjYyLDcuOTIsMjguNjIsMjMuMjgsMCwxMS4zMS04LjczLDE3LjUzLTI0LjU4LDE3LjUzaC0zOS4zMXYxMC41M2g0MC4yMWMyMi4zMiwwLDM1LjEyLTEwLjU2LDM1LjEyLTI4Ljk3LDAtMjIuNzQtMTkuMjQtMjguMTktMzYuMjEtMzNaIi8+PHBhdGggY2xhc3M9ImNscy00IiBkPSJtODUwLjMzLDUuNDdjLTcuMTIsMC04Ljk5LDIuMTQtMTIuNTIsMTQuMzNsLTI0LjgzLDg0LjEtMjQuODMtODQuMDljLTMuNTMtMTIuMi01LjQxLTE0LjM0LTEyLjUyLTE0LjM0LTguMzUsMC05LjUsOC4wNy0xMC4xOSwxMi44OWwtMTMuNDIsOTguNzRoMTEuMThsMTMuMzMtOTguNWMuMDMuMS4wNi4yMS4wOS4zMmwyNS4yLDg2LjA5YzIuODQsOS44OCw0LjE4LDEzLjMsMTEuMTcsMTMuM3M4LjMzLTMuNDIsMTEuMTctMTMuMjlsMjUuMjEtODYuMTVjLjAzLS4wOS4wNS0uMTguMDctLjI3bDEzLjMzLDk4LjVoMTEuMThsLTEzLjQyLTk4Ljc2Yy0uNjktNC44Mi0xLjg0LTEyLjg4LTEwLjE5LTEyLjg4WiIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtNCIgcG9pbnRzPSIxMDM3LjIxIDcuMjcgMTAzNy4yMSAxNy41MSAxMDY3LjA2IDE3LjUxIDEwNjcuMDYgMTE3LjEgMTA3OC4yIDExNy4xIDEwNzguMiAxNy41MSAxMTA4LjA0IDE3LjUxIDExMDguMDQgNy4yNyAxMDM3LjIxIDcuMjciLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im0xMDk2LjkxLDExNi4xYy01LjU2LDAtMTAuMDgtNC42MS0xMC4wOC0xMC4yN3M0LjUyLTEwLjI3LDEwLjA4LTEwLjI3LDEwLjEzLDQuNjEsMTAuMTMsMTAuMjctNC41NSwxMC4yNy0xMC4xMywxMC4yN1ptMC0xOS4wN2MtMi4zLDAtNC40NC45My02LjAyLDIuNjEtMS41NSwxLjY2LTIuNDEsMy44NS0yLjQxLDYuMThzLjg2LDQuNTMsMi40MSw2LjE4YzEuNTgsMS42OCwzLjcyLDIuNjEsNi4wMiwyLjYxLDQuNjgsMCw4LjQ5LTMuOTQsOC40OS04Ljc5cy0zLjgxLTguNzktOC40OS04Ljc5Wm01LjM5LDE0Ljk4aC0yLjAxbC0zLjM2LTUuNTNoLTIuNXY1LjUzaC0xLjQ4di0xMi4xNWg0LjYzYzIuNjEsMCwzLjg4LDEuMDgsMy44OCwzLjNzLTEuNDEsMy0yLjc1LDMuMjdsMy42LDUuNTlabS03Ljg4LTYuOTZoMi4wN2MxLjk4LDAsMy4zNy0uMTQsMy4zNy0xLjkzLDAtMS4yNC0uODYtMS44NC0yLjYyLTEuODRoLTIuODJ2My43N1oiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Im05MTcuNTMsNS40N2MtMjMuNzksMC0zOC41NiwxNC43OC0zOC41NiwzOC41N3Y3My4wNmgxMS4xM1Y0Mi4wOWMwLTE2LjA5LDEwLjUxLTI2LjA4LDI3LjQzLTI2LjA4czI3LjQzLDkuOTksMjcuNDMsMjYuMDh2MTMuNDhoLTQ4Ljk3djEwLjIzaDQ4Ljk3djUxLjNoMTEuMTNWNDQuMDRjMC0yMy43OS0xNC43OC0zOC41Ny0zOC41Ny0zOC41N1oiLz48cGF0aCBjbGFzcz0iY2xzLTQiIGQ9Im0xMDIxLjkxLDYxLjA5YzguNjktNS4wOCwxMy4wOS0xMy43OCwxMy4wOS0yNS45LDAtMTcuNS0xNC4xOS0yOS43Mi0zNC41Mi0yOS43MnMtMzMuNjIsMTMuOS0zMy42MiwzNS40MnY3Ni4yMWgxMS4xM1Y0MC41OWMwLTE1LjM5LDguNC0yNC41OCwyMi40OC0yNC41OHMyMy4wOCw4LjEzLDIzLjA4LDE5Ljc4YzAsMTMuNTMtOS4wNywyMS4yOC0yNC44OCwyMS4yOGgtMTQuMzh2MTAuMjNoMTguODhjMTQuNSwwLDIyLjQ4LDYuMjgsMjIuNDgsMTcuNjh2MzIuMTJoMTEuNDN2LTMxLjIyYzAtMTEuOTMtNS41LTIwLjg0LTE1LjE5LTI0LjhaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMjM5LjcyLDE4My4xMWMwLDMuNzctMS4xNyw2LjgtMy41MSw5LjEtMi40NywyLjQzLTUuODksMy42NC0xMC4yNywzLjY0LTQuODEsMC05LjAxLTEuNTQtMTIuNjEtNC42MWwyLjE1LTIuOTljMy43MywyLjYsNy4xMywzLjksMTAuMjEsMy45czUuNTItLjc5LDcuMjEtMi4zN2MxLjY5LTEuNTgsMi41NC0zLjY5LDIuNTQtNi4zNCwwLTEuOTEtLjc0LTMuNi0yLjIxLTUuMDctMS4yNi0xLjI2LTMuODgtMi43NC03Ljg3LTQuNDUtMy45OS0xLjcxLTYuNzQtMy4zMy04LjI1LTQuODQtMS43My0xLjczLTIuNi00LjEtMi42LTcuMDgsMC0zLjI1LDEuMTgtNS45MiwzLjU0LTgsMi4zNi0yLjA4LDUuNDUtMy4xMiw5LjI2LTMuMTIsNC45LDAsOC44NiwxLjU0LDExLjksNC42MmwtMi4yMSwyLjZjLTIuOS0yLjQzLTYuMDItMy42NC05LjM2LTMuNjQtMi42OSwwLTQuODguNy02LjU2LDIuMTFzLTIuNTQsMy4yLTIuNTQsNS4zNmMwLDEuNzMuNjEsMy4yMSwxLjgyLDQuNDIsMS4yMSwxLjIxLDMuNjYsMi42LDcuMzQsNC4xNiwzLjk0LDEuNjUsNi42NywzLjA4LDguMTksNC4yOSwyLjU2LDIuMTcsMy44Myw0Ljk0LDMuODMsOC4zMloiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im0yNzQuODksMTc5LjY2YzAsNC45LTEuMjksOC44MS0zLjg3LDExLjczLTIuNTgsMi45Mi02LjA2LDQuMzktMTAuNDMsNC4zOXMtNy42Ni0xLjQ4LTEwLjI0LTQuNDVjLTIuNTgtMi45Ny0zLjg3LTYuOTQtMy44Ny0xMS45M3MxLjI5LTguOTYsMy44Ny0xMS45M2MyLjU4LTIuOTcsNi4xLTQuNDUsMTAuNTYtNC40NXM3LjY0LDEuNDksMTAuMTcsNC40NWMyLjU0LDIuOTcsMy44LDcuMDMsMy44LDEyLjE5Wm0tNC4wMy0uMTNjMC0zLjg2LS45Ni03LjAxLTIuODktOS40Ni0xLjkzLTIuNDUtNC4zNy0zLjY3LTcuMzEtMy42N3MtNS41NCwxLjE3LTcuMzgsMy41MWMtMS44NCwyLjM0LTIuNzYsNS40Ni0yLjc2LDkuMzZzLjk2LDcuMDUsMi44OSw5LjQ2YzEuOTMsMi40MSw0LjM3LDMuNjEsNy4zMSwzLjYxLDMuMTYsMCw1LjY0LTEuMTUsNy40NC0zLjQ1LDEuOC0yLjMsMi43LTUuNDIsMi43LTkuMzZaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtMzAwLjg5LDE0OS40NGwtMS41NiwyLjczYy0xLjMtLjg3LTIuODQtMS4zLTQuNjItMS4zcy0zLjI1LjUyLTQuMjksMS41NmMtMS4yMSwxLjIxLTEuODIsMy4zNC0xLjgyLDYuMzd2NWgxMC4wMXYzLjE5aC0xMC4wMXYyOC4wMWgtMy45di0yOC4wMWgtNS41MnYtMy4xOWg1LjUydi01YzAtMy45OS45OC02Ljk2LDIuOTItOC45MSwxLjY1LTEuNjUsMy44OC0yLjQ3LDYuNy0yLjQ3czQuOTYuNjcsNi41NiwyLjAxWiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTMyMi43MywxOTQuMjJjLTEuOTksMS00LjA1LDEuNS02LjE3LDEuNS0yLjgyLDAtNC45Ni0uNzQtNi40NC0yLjIxLS44Mi0uODItMS4zNC0xLjkzLTEuNTYtMy4zMS0uMTctLjkxLS4yNi0yLjQ5LS4yNi00Ljc1di0xOC40NmgtNS40NnYtMy4xOWg1LjQ2di04Ljg0aDMuOXY4Ljg0aDEwLjAxdjMuMTloLTEwLjAxdjE3LjY4YzAsMi44Mi4xNyw0LjYyLjUyLDUuMzkuNjEsMS40MywyLjA2LDIuMTUsNC4zNSwyLjE1LDEsMCwyLjA0LS4xNSwzLjEyLS40Ni40OC0uMTcuOTctLjM1LDEuNDktLjUybDEuMDQsMi45OVoiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im0zNzAuOTYsMTYzLjhsLTkuMSwzMS4yaC00LjgxbC03Ljg2LTI3Ljc1LTgsMjcuNzVoLTQuODFsLTguNzEtMzEuMmgzLjk2bDcuMzUsMjcuMjQsNy44LTI3LjI0aDUuMmw3LjY3LDI3LjI0LDcuNDgtMjcuMjRoMy44M1oiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im0zOTguNzEsMTk1aC0zLjU3di0yLjM0Yy0xLC41Mi0xLjk5LDEuMDQtMi45OSwxLjU2LTIuMzQuOTUtNC42NiwxLjQzLTYuOTYsMS40My0yLjk5LDAtNS40MS0uODgtNy4yNS0yLjYzLTEuODQtMS43NS0yLjc2LTQuMDQtMi43Ni02Ljg2LDAtNi44LDYtMTAuMjEsMTgtMTAuMjFoMS42MnYtMS4xN2MwLTMuMjktLjUyLTUuNDgtMS41Ni02LjU3LTEuMTctMS4yMS0zLjE0LTEuODItNS45Mi0xLjgycy01Ljc0LjgyLTguNjUsMi40N2wtMS42Mi0yLjczYy40OC0uNDgsMS41LTEuMDQsMy4wNi0xLjY5LDIuMzgtMSw0Ljk0LTEuNSw3LjY3LTEuNSwzLjY0LDAsNi40NiwxLDguNDUsMi45OSwxLjEzLDEuMTMsMS44NCwyLjUxLDIuMTUsNC4xNi4yMiwxLC4zMiwyLjYuMzIsNC44MXYyMC4wOFptLTMuOS01LjMzdi0xMC41M2gtMS43NWMtOS4yMywwLTEzLjg1LDIuMzYtMTMuODUsNy4wOCwwLDEuNjkuNTQsMy4wOCwxLjYyLDQuMTYsMS4yMSwxLjIxLDIuOTcsMS44Miw1LjI3LDEuODIsMi4xNywwLDUuMDctLjg0LDguNzEtMi41NFoiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im00MjQuMTksMTYzLjQ4bC0uOTEsMy4yNWMtLjkxLS4xMy0xLjc1LS4xOS0yLjU0LS4xOS0xLjk1LDAtMy43My40Ni01LjMzLDEuMzYtMS4xNy42NS0yLjE5LDEuNS0zLjA1LDIuNTQtLjM5LjUyLS43NiwxLjA0LTEuMSwxLjU2djIzLjAxaC0zLjl2LTMxLjJoMy43MXY0LjA5YzIuNzMtMy4yOSw2LjAyLTQuOTQsOS44OC00Ljk0LDEuMTMsMCwyLjIxLjE3LDMuMjUuNTJaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtNDUyLjY2LDE3OC4xYzAsLjA5LS4wMi4zOS0uMDYuOTEtLjA0LjUyLS4wNi45MS0uMDYsMS4xN2gtMjIuMzZjMCwzLjU1LjkzLDYuNDEsMi43OSw4LjU4LDEuODYsMi4xNyw0LjUxLDMuMjUsNy45MywzLjI1LDIuNjQsMCw1LjY2LS44NCw5LjA0LTIuNTRsMS43NSwyLjk5Yy0uMjYuMzUtMS4zMi45MS0zLjE5LDEuNjktMi42LDEtNS4yNCwxLjUtNy45MywxLjUtNC40NiwwLTcuOTgtMS40Ny0xMC41Ni00LjQyLTIuNTgtMi45NS0zLjg3LTYuODMtMy44Ny0xMS42NHMxLjI5LTkuMDQsMy44Ny0xMi4wNmMyLjU4LTMuMDEsNi4wMy00LjUyLDEwLjM3LTQuNTIsMy42OCwwLDYuNjMsMS4zLDguODQsMy45LDIuMywyLjczLDMuNDQsNi40NiwzLjQ0LDExLjE4Wm0tMy45Ni0xLjIzYzAtMi43My0uNjEtNS4wNy0xLjgyLTcuMDItMS41Mi0yLjM0LTMuNjYtMy41MS02LjQzLTMuNTFzLTUuMTEuOTUtNy4wMiwyLjg2Yy0xLjkxLDEuOTEtMi45NSw0LjQ2LTMuMTIsNy42N2gxOC40WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTUwOC44OCwxOTEuNjJjLS42MS42NS0xLjk1LDEuNDEtNC4wMywyLjI3LTMuMDgsMS4yNi02LjM1LDEuODktOS44MSwxLjg5LTUuODUsMC0xMC42Ni0xLjkzLTE0LjQzLTUuNzktMy45OS00LjA3LTUuOTgtOS41MS01Ljk4LTE2LjMyczIuMDgtMTIuNjUsNi4yNC0xNi45YzMuOS0zLjk5LDguODQtNS45OCwxNC44Mi01Ljk4LDMuMjUsMCw2LjIyLjUsOC45MSwxLjUsMS44Mi42OSwzLjA4LDEuMzksMy43NywyLjA4bC0xLjg5LDMuMDVjLTIuNi0xLjg2LTYuMDktMi43OS0xMC40Ni0yLjc5LTQuODUsMC04Ljg4LDEuNjUtMTIuMDksNC45NC0zLjM4LDMuNDItNS4wNyw3Ljk1LTUuMDcsMTMuNThzMS41MiwxMC4yOCw0LjU1LDEzLjY4YzMuMDMsMy40LDcuMDgsNS4xLDEyLjE1LDUuMSwzLjYsMCw3LjM5LTEuMTEsMTEuMzgtMy4zMmwxLjk1LDIuOTlaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtNTM5LjExLDE3OC4xYzAsLjA5LS4wMi4zOS0uMDYuOTEtLjA0LjUyLS4wNi45MS0uMDYsMS4xN2gtMjIuMzZjMCwzLjU1LjkzLDYuNDEsMi43OSw4LjU4LDEuODYsMi4xNyw0LjUxLDMuMjUsNy45MywzLjI1LDIuNjQsMCw1LjY2LS44NCw5LjA0LTIuNTRsMS43NSwyLjk5Yy0uMjYuMzUtMS4zMi45MS0zLjE5LDEuNjktMi42LDEtNS4yNCwxLjUtNy45MywxLjUtNC40NiwwLTcuOTgtMS40Ny0xMC41Ni00LjQyLTIuNTgtMi45NS0zLjg3LTYuODMtMy44Ny0xMS42NHMxLjI5LTkuMDQsMy44Ny0xMi4wNmMyLjU4LTMuMDEsNi4wMy00LjUyLDEwLjM3LTQuNTIsMy42OCwwLDYuNjMsMS4zLDguODQsMy45LDIuMywyLjczLDMuNDQsNi40NiwzLjQ0LDExLjE4Wm0tMy45Ni0xLjIzYzAtMi43My0uNjEtNS4wNy0xLjgyLTcuMDItMS41Mi0yLjM0LTMuNjYtMy41MS02LjQzLTMuNTFzLTUuMTEuOTUtNy4wMiwyLjg2Yy0xLjkxLDEuOTEtMi45NSw0LjQ2LTMuMTIsNy42N2gxOC40WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTU2My4yOSwxNjMuNDhsLS45MSwzLjI1Yy0uOTEtLjEzLTEuNzUtLjE5LTIuNTQtLjE5LTEuOTUsMC0zLjczLjQ2LTUuMzMsMS4zNi0xLjE3LjY1LTIuMTksMS41LTMuMDUsMi41NC0uMzkuNTItLjc2LDEuMDQtMS4xLDEuNTZ2MjMuMDFoLTMuOXYtMzEuMmgzLjcxdjQuMDljMi43My0zLjI5LDYuMDItNC45NCw5Ljg4LTQuOTQsMS4xMywwLDIuMjEuMTcsMy4yNS41MloiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im01ODYuODgsMTk0LjIyYy0xLjk5LDEtNC4wNSwxLjUtNi4xOCwxLjUtMi44MiwwLTQuOTYtLjc0LTYuNDQtMi4yMS0uODItLjgyLTEuMzQtMS45My0xLjU2LTMuMzEtLjE3LS45MS0uMjYtMi40OS0uMjYtNC43NXYtMTguNDZoLTUuNDZ2LTMuMTloNS40NnYtOC44NGgzLjl2OC44NGgxMC4wMXYzLjE5aC0xMC4wMXYxNy42OGMwLDIuODIuMTcsNC42Mi41Miw1LjM5LjYxLDEuNDMsMi4wNiwyLjE1LDQuMzYsMi4xNSwxLDAsMi4wNC0uMTUsMy4xMi0uNDYuNDgtLjE3Ljk3LS4zNSwxLjQ5LS41MmwxLjA0LDIuOTlaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtNTk4LjcxLDE1My4yN2MwLC42OS0uMjUsMS4zLS43NSwxLjgyLS41LjUyLTEuMTIuNzgtMS44NS43OC0uNjksMC0xLjMtLjI2LTEuODItLjc4cy0uNzgtMS4xMy0uNzgtMS44MmMwLS43NC4yNi0xLjM1Ljc4LTEuODUuNTItLjUsMS4xMy0uNzUsMS44Mi0uNzUuNzQsMCwxLjM1LjI1LDEuODUuNzUuNS41Ljc1LDEuMTIuNzUsMS44NVptLS42NSw0MS43M2gtMy45di0zMS4yaDMuOXYzMS4yWiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTYyNS44MiwxNDkuNDRsLTEuNTYsMi43M2MtMS4zLS44Ny0yLjg0LTEuMy00LjYxLTEuM3MtMy4yNS41Mi00LjI5LDEuNTZjLTEuMjEsMS4yMS0xLjgyLDMuMzQtMS44Miw2LjM3djVoMTAuMDF2My4xOWgtMTAuMDF2MjguMDFoLTMuOXYtMjguMDFoLTUuNTJ2LTMuMTloNS41MnYtNWMwLTMuOTkuOTgtNi45NiwyLjkzLTguOTEsMS42NS0xLjY1LDMuODgtMi40Nyw2LjY5LTIuNDdzNC45Ni42Nyw2LjU3LDIuMDFaIi8+PHBhdGggY2xhc3M9ImNscy0xIiBkPSJtNjM0LjU5LDE1My4yN2MwLC42OS0uMjUsMS4zLS43NSwxLjgyLS41LjUyLTEuMTIuNzgtMS44NS43OC0uNjksMC0xLjMtLjI2LTEuODItLjc4cy0uNzgtMS4xMy0uNzgtMS44MmMwLS43NC4yNi0xLjM1Ljc4LTEuODUuNTItLjUsMS4xMy0uNzUsMS44Mi0uNzUuNzQsMCwxLjM1LjI1LDEuODUuNzUuNS41Ljc1LDEuMTIuNzUsMS44NVptLS42NSw0MS43M2gtMy45di0zMS4yaDMuOXYzMS4yWiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTY2Ni43LDE5Mi41M2MtLjM1LjQzLTEuNDEsMS0zLjE4LDEuNjktMi40Ny45NS00Ljk2LDEuNDMtNy40OCwxLjQzLTQuMzgsMC03LjkzLTEuNDEtMTAuNjYtNC4yMy0yLjczLTIuODItNC4wOS02LjYxLTQuMDktMTEuMzgsMC01LjAzLDEuNDQtOS4xMiw0LjMyLTEyLjI5LDIuODgtMy4xNiw2LjYyLTQuNzUsMTEuMjEtNC43NSwyLjMsMCw0LjUzLjQ4LDYuNywxLjQzLDEuMzQuNjEsMi4yNSwxLjE1LDIuNzMsMS42MmwtMS43NSwyLjczYy0yLjUxLTEuNTItNS4xMy0yLjI3LTcuODctMi4yNy0zLjM0LDAtNi4wNiwxLjIyLTguMTYsMy42Ny0yLjEsMi40NS0zLjE1LDUuNTQtMy4xNSw5LjI2czEuMDIsNi44LDMuMDUsOS4xYzIuMDQsMi4zLDQuNjYsMy40NCw3Ljg3LDMuNDQsMi42NCwwLDUuNTctLjgsOC43Ny0yLjRsMS42OSwyLjkyWiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTY5NC4wNywxOTVoLTMuNTh2LTIuMzRjLTEsLjUyLTEuOTksMS4wNC0yLjk5LDEuNTYtMi4zNC45NS00LjY2LDEuNDMtNi45NiwxLjQzLTIuOTksMC01LjQxLS44OC03LjI1LTIuNjMtMS44NC0xLjc1LTIuNzYtNC4wNC0yLjc2LTYuODYsMC02LjgsNi0xMC4yMSwxOC0xMC4yMWgxLjYydi0xLjE3YzAtMy4yOS0uNTItNS40OC0xLjU2LTYuNTctMS4xNy0xLjIxLTMuMTQtMS44Mi01LjkyLTEuODJzLTUuNzQuODItOC42NSwyLjQ3bC0xLjYyLTIuNzNjLjQ4LS40OCwxLjUtMS4wNCwzLjA1LTEuNjksMi4zOC0xLDQuOTQtMS41LDcuNjctMS41LDMuNjQsMCw2LjQ2LDEsOC40NSwyLjk5LDEuMTMsMS4xMywxLjg0LDIuNTEsMi4xNSw0LjE2LjIyLDEsLjMzLDIuNi4zMyw0LjgxdjIwLjA4Wm0tMy45LTUuMzN2LTEwLjUzaC0xLjc1Yy05LjIzLDAtMTMuODQsMi4zNi0xMy44NCw3LjA4LDAsMS42OS41NCwzLjA4LDEuNjIsNC4xNiwxLjIxLDEuMjEsMi45NywxLjgyLDUuMjYsMS44MiwyLjE3LDAsNS4wNy0uODQsOC43MS0yLjU0WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTcxOS40OCwxOTQuMjJjLTEuOTksMS00LjA1LDEuNS02LjE4LDEuNS0yLjgyLDAtNC45Ni0uNzQtNi40My0yLjIxLS44Mi0uODItMS4zNC0xLjkzLTEuNTYtMy4zMS0uMTctLjkxLS4yNi0yLjQ5LS4yNi00Ljc1di0xOC40NmgtNS40NnYtMy4xOWg1LjQ2di04Ljg0aDMuOXY4Ljg0aDEwLjAxdjMuMTloLTEwLjAxdjE3LjY4YzAsMi44Mi4xNyw0LjYyLjUyLDUuMzkuNjEsMS40MywyLjA2LDIuMTUsNC4zNiwyLjE1LDEsMCwyLjA0LS4xNSwzLjEyLS40Ni40OC0uMTcuOTctLjM1LDEuNS0uNTJsMS4wNCwyLjk5WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0ibTczMS4zMSwxNTMuMjdjMCwuNjktLjI1LDEuMy0uNzUsMS44Mi0uNS41Mi0xLjEyLjc4LTEuODUuNzgtLjY5LDAtMS4zLS4yNi0xLjgyLS43OHMtLjc4LTEuMTMtLjc4LTEuODJjMC0uNzQuMjYtMS4zNS43OC0xLjg1LjUyLS41LDEuMTMtLjc1LDEuODItLjc1Ljc0LDAsMS4zNS4yNSwxLjg1Ljc1LjUuNS43NSwxLjEyLjc1LDEuODVabS0uNjUsNDEuNzNoLTMuOXYtMzEuMmgzLjl2MzEuMloiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im03NjYuNDEsMTc5LjY2YzAsNC45LTEuMjksOC44MS0zLjg3LDExLjczcy02LjA2LDQuMzktMTAuNDMsNC4zOS03LjY2LTEuNDgtMTAuMjQtNC40NWMtMi41OC0yLjk3LTMuODctNi45NC0zLjg3LTExLjkzczEuMjktOC45NiwzLjg3LTExLjkzYzIuNTgtMi45Nyw2LjEtNC40NSwxMC41Ni00LjQ1czcuNjQsMS40OSwxMC4xNyw0LjQ1YzIuNTQsMi45NywzLjgsNy4wMywzLjgsMTIuMTlabS00LjAzLS4xM2MwLTMuODYtLjk2LTcuMDEtMi44OS05LjQ2LTEuOTMtMi40NS00LjM3LTMuNjctNy4zMS0zLjY3cy01LjU0LDEuMTctNy4zOCwzLjUxYy0xLjg0LDIuMzQtMi43Niw1LjQ2LTIuNzYsOS4zNnMuOTYsNy4wNSwyLjg5LDkuNDZjMS45MywyLjQxLDQuMzcsMy42MSw3LjMxLDMuNjEsMy4xNiwwLDUuNjQtMS4xNSw3LjQ0LTMuNDUsMS44LTIuMywyLjctNS40MiwyLjctOS4zNloiLz48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Im03OTcuODEsMTk1aC0zLjl2LTE4LjJjMC0yLjQ3LS4wNy00LjE2LS4yLTUuMDctLjI2LTEuNTItLjgtMi42OS0xLjYyLTMuNTEtMS4xNy0xLjE3LTIuNzktMS43NS00Ljg4LTEuNzUtMS45NSwwLTQuMDkuNS02LjQzLDEuNS0xLjczLjY5LTIuNzcsMS4yMS0zLjEyLDEuNTZ2MjUuNDhoLTMuOXYtMzEuMmgzLjcxdjIuMjhjMy4yNS0yLjA0LDYuNjctMy4wNiwxMC4yNy0zLjA2LDMuMDgsMCw1LjQ4Ljg3LDcuMjEsMi42LDEuMywxLjMsMi4xNCwyLjk1LDIuNTQsNC45NC4yMiwxLjEzLjMyLDMuMDEuMzIsNS42NnYxOC43OVoiLz48L3N2Zz4=") left top / contain no-repeat;
+    }
+    @bottom-right {
+      content: counter(page) " of " counter(pages);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 8pt;
+      color: #62666c;
+      vertical-align: middle;
+    }
+  }
   @media print {
     html, body { background: #fff; }
     body * { visibility: hidden; }
@@ -281,7 +311,21 @@
       width: 100%;
       padding: 0;
     }
-    .print-doc { padding: 0; }
+    .print-doc { padding: 0; font-size: 9pt; }
+    .print-doc .pv-h1 { font-size: 13pt; }
+    .print-doc .pv-h2 { font-size: 10.5pt; }
+    .print-doc .pv-meta, .print-doc .pv-intro { font-size: 8.5pt; }
+    .print-doc .pv-table { font-size: 9pt; }
+    .print-doc .pv-table th { font-size: 7.5pt; padding: 4px 6px; }
+    .print-doc .pv-table td { padding: 4px 6px; }
+    .print-doc .pv-table td.desc { font-size: 8pt; }
+    .print-doc .st svg { width: 11pt; height: 11pt; vertical-align: -2.1pt; }
+    .print-doc .pv-legend { font-size: 8.5pt; padding: 7px 10px; }
+    .print-doc .pv-legend-title { font-size: 7.5pt; }
+    .print-doc .pv-legend-item { margin-top: 3px; gap: 6px; }
+    .print-doc .pv-note { font-size: 8.5pt; break-before: avoid; page-break-before: avoid; }
+    .print-doc .pv-h2.page-break { break-before: page; page-break-before: always; margin-top: 0; }
+    .print-doc .see-details { font-size: 8pt; margin-top: 2px; }
     .print-doc tr, .print-doc blockquote, .print-doc pre, .print-doc li { break-inside: avoid; page-break-inside: avoid; }
     .print-doc h1, .print-doc h2, .print-doc h3, .print-doc h4 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
     .print-doc thead { display: table-header-group; }
@@ -299,7 +343,7 @@
 <body>
 <div class="wrap">
   <h1>Scorecard Summary Converter</h1>
-  <p class="subtitle">Paste or upload a raw scorecard export. Get back the PASS / NOT SUPPORTED / FAILING summary, as text and Markdown.</p>
+  <p class="subtitle">Paste or upload a raw scorecard export. Get back the PASS / NO EVIDENCE / FAILING summary, as text and Markdown.</p>
 
   <div class="panel">
     <h2>Source export</h2>
@@ -330,10 +374,66 @@
 
 const STATUS_MAP = {
   "pass": "PASS",
-  "not applicable": "NOT SUPPORTED",
+  "not applicable": "NO EVIDENCE",
   "fail": "FAIL",
   "warning": "WARNING",
 };
+
+// Category descriptions, verbatim from buildingSMART/ifc-gherkin-rules docs/fixtures/functional_parts.json (main).
+const CATEGORY_DESCRIPTIONS = {
+  SYNTAX: "STEP Physical File syntax.",
+  SCHEMA: "IFC schema referenced in the file, including formal propositions and functions encoded in the EXPRESS schema language.",
+  IFC: "Complementary checks to the schema validation, considered prerequisites or fundamental for a valid IFC file. At the moment includes checks on: the validity of the IFC schema version; and the absence of deprecated concepts.",
+  ANN: "The ability to add annotations to elements and spaces, such as labels, notes, and dimensions.",
+  ASM: "The ability to model elements composed of / constructed by other elements. For example, a roof might be assembled from a series of prefabricated truss components.",
+  BLT: "The ability to model various building and infrastructure elements, including walls, floors, roofs, stairs, doors, windows, columns, road pavements, bridge decks, railway track elements, etc.",
+  CLS: "The ability to classify elements, materials, and systems according to various classification systems, such as the UNIFORMAT or Omniclass classification systems.",
+  CST: "The ability to assign costing information to objects.",
+  CTR: "The ability to model constraints on building elements, such as minimum and maximum dimensions or clearances, and to enforce these constraints during design and construction.",
+  CTX: "The ability to assign colour, texture and other presentation appearance information to objects.",
+  DOC: "The ability to associate reference to documentation to objects.",
+  GEM: "The ability to represent built elements and spaces using various geometry types, including parametric, mesh, and voxel-based representations.",
+  GRF: "The ability to accurately define the geographic location and orientation of the model relative to a reference coordinate system, such as a national or global coordinate system. ",
+  GRP: "The ability to group objects related by functional or logical criteria. Used, for example to model building systems, such as HVAC (heating, ventilation, and air conditioning) systems; to group assets that have the same maintenance schedule; to group all terminals of a fire-protection system.",
+  LAY: "The ability to assign layers (also known as, CAD layer) to collection of elements. This is used mainly for grouping and visibility control, and in general to organise geometry into groups that may be shown or hidden.",
+  LIB: "The ability to associate library entities, such as from a product library or external database to objects and object types.",
+  MAT: "The ability to define materials assigned to elements.",
+  OJP: "The ability to define the location, orientation, and scale of built elements and systems within the building model.",
+  OJT: "The ability to define elements (and unfortunately not systems) based on their type or function within the model, allowing reusability of information by the occurrence of such types.",
+  POR: "The ability to define ports (as means for an element to connect to other elements) and the relationship that is made between two ports.",
+  POS: "The ability to define (virtual) objects that are used to position other elements relatively. Includes grids, alignments, and referents.",
+  PJS: "The ability to define the overall context and directory of objects within the model. Among others, the context definition includes default units and geometric representation context for shape representations.",
+  PSE: "The ability to define properties of elements and systems, such as their performance characteristics.",
+  QTY: "The ability to define quantities of elements, such as their dimensions, volume, area, weight.",
+  SDL: "The ability to assign scheduling information to objects.",
+  SPA: "The ability to model spaces, such as rooms, hallways, clearance zones, and circulation areas.",
+  SPS: "The ability to define spatial organisation within a building or infrastructure project. This includes the hierarchical relationships between spatial containers, such as buildings within a site, storeys within a building and rooms within a storey.",
+  STR: "The ability to define structural members and structural connections, as analysis idealizations of built elements. And the ability to define actions (such as forces, displacements, etc.) and reactions (support reactions, internal forces, deflections, etc.) associated to structural items and specified by using the basic load definitions.",
+  VER: "The ability to track changes to building data over time and to maintain a history of changes.",
+  VRT: "The ability to model special elements providing imaginary, placeholder, or provisional areas (e.g. clearance), volumes, and boundaries.",
+  GDP: "The ability to define the placement of a product in relation to a design grid.",
+  LIP: "The ability to define the placement of a product in relation to a curve.",
+  LOP: "The ability to define the placement of a product in relation to the placement of another product; or its absolute placement within the geometric representation context of the project.",
+  ALB: "The ability to define an alignment curve, and its components. These can be used as reference for object placement.",
+  GRD: "The ability to define a design grid to be used as reference for object placement.",
+  RFT: "The ability to define a referent to be used as reference for object placement.",
+  AXG: "This involves representing the geometry using a set of axes, where each axis consists of a position in 3D space and a direction vector. This can be useful for representing geometry that follows a certain pattern or direction, such as walls, beams, columns, or other elements. In IFC, axis geometry can be represented using the IfcCartesianPoint and IfcDirection classes, which define the position and direction of the axes, respectively.",
+  ALS: "This involves representing the geometry using a collection of segments that define a linear path in 3D space. This can be useful for representing linear objects such as roads, railways, or pipelines.",
+  BBX: "This involves defining an orthogonal box, oriented parallel to the axes of the object coordinate system in which it is defined and containing a geometry object, which defines the spatial extent of the latter.",
+  BRP: "This involves representing geometry using a collection of connected surfaces and edges. BREP geometry can be used to represent complex shapes with curved surfaces or unusual topology. BREP geometry can be represented in IFC using IfcFacetedBrep for polygonal meshes or IfcManifoldSolidBrep for more complex solid geometry. These entities can be further described using a collection of geometric representations such as IfcCartesianPoint, IfcPolyLoop, and IfcSurface.",
+  CPD: "This involves visualizations of a 3D model where part of the model is \"clipped\" or cut away to allow for better examination of the internal structures or components. This is often done using clipping planes or sections.",
+  CSG: "This involves creating complex geometry by combining simpler shapes using Boolean operations such as union, intersection, and difference. CSG can be useful for creating complex shapes with predictable and repeatable geometry. CSG can be represented in IFC using the IfcBooleanResult entity, which defines the Boolean operation to be applied to a set of one or more shape representations.",
+  PBG: "This involves representing geometry using a collection of individual points in 3D space. Point-based geometry can be useful for representing large-scale environments or for creating simplified representations of more complex geometry. Point-based geometry can be represented in IFC using a range of different point types, such as 3D point clouds or scattered point data.",
+  MPD: "This involves identifying a representation and a representation item in that representation for the purpose of mapping. The representation item defines the origin of the mapping. The representation map is used as the source of a mapping by a mapped item.",
+  RCO: "Such as connection geometry, space boundaries, interference geometries. This is not a geometry category per se, but it's a specific way geometry is used in IFC",
+  SWE: "This involves taking a 2D shape (often called the \"profile\") and moving it along a 3D path, generating a 3D shape. The resulting shape is typically smooth and continuous, with its cross-section changing gradually along the length of the path. Sweep geometry can be useful for representing a variety of objects, such as pipes, cables, and architectural details like moldings. In IFC, sweep geometry can be represented using the IfcExtrudedAreaSolid, IfcRevolvedAreaSolid, and IfcSweptAreaSolid entities.",
+  TAS: "This involves representing geometry using a collection of interconnected vertices, edges, and faces, which are used to approximate a smooth surface. Tessellated geometry can be useful for representing organic or irregular shapes, or for creating low-resolution representations of more complex geometry. In IFC, tessellated geometry can be represented using a range of different mesh types, such as triangular, quadrilateral, or polyhedral meshes.",
+  TFM: "Transformation geometry involves representing geometry using spatial transformations, such as rotations, translations, and scaling. It allows for the modification of existing geometry without the need to create new geometry from scratch. Transformation geometry can be used to represent various types of transformations, including cartesian transformations, placement transformations, and composite transformations, among others. These transformations can be applied to a range of geometric entities, including points, curves, surfaces, and solids, to create new or modified geometry. In IFC, transformation geometry is represented using the IfcCartesianTransformationOperator and IfcObjectPlacement entities.",
+};
+
+function describe(code) {
+  return CATEGORY_DESCRIPTIONS[code] || "";
+}
 
 const CANONICAL_FUNCTIONAL = [
   ["ANN", "Annotations"],
@@ -443,12 +543,23 @@ function markdownCell(value) {
   return String(value).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\|/g, "&#124;").replace(/\r?\n/g, " ");
 }
 
+const RULE_CATALOG_URL = "https://buildingsmart.github.io/ifc-gherkin-rules/branches/main/features/index.html";
+const RULE_CATALOG_TEXT = "For the full list of Validation Service rules, see the rule catalog:";
+const RULES_POINTER = "The Failing rules table on the next page lists each rule that failed, with its reported count.";
+
+function listNames(names) {
+  return names.length < 2 ? names.join("") : names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+}
+function subpartsPointer(withSubs) {
+  return `The Subparts table on the next page breaks down ${listNames(withSubs.map(c => c.name))} into their subparts.`;
+}
+
 function rulesMarkdown(rules) {
   return ["## Failing rules", "", ...(rules.length ? [
-    "| Rule | Category | Reported count |",
+    "| Rule | Functional Part | Reported count |",
     "|---|---|---|",
     ...rules.map(r => `| ${markdownCell(r.name)} | ${markdownCell(r.category)} | ${r.count} |`)
-  ] : ["None"]), ""];
+  ] : ["None"]), "", `${RULE_CATALOG_TEXT} [${RULE_CATALOG_URL}](${RULE_CATALOG_URL})`, ""];
 }
 
 function normalizeSubs(subs, code) {
@@ -558,12 +669,15 @@ function label(code, name) {
   return `${name} (${code})`;
 }
 
-function renderCategoryBlockText(cat) {
+const SUBPARTS_NOTE = "see Subparts table";
+
+// withSubs=false: parent line only, with a pointer to the Subparts section.
+// withSubs=true: parent line followed by its subparts (used in the Subparts section).
+function renderCategoryBlockText(cat, withSubs = false) {
   const lines = [];
-  const expand = cat.subs.length > 0;
-  const suffix = expand ? " (see details below)" : "";
+  const suffix = (!withSubs && cat.subs.length) ? ` (${SUBPARTS_NOTE})` : "";
   lines.push(`- ${label(cat.code, cat.name)}: ${STATUS_MAP[cat.status] || cat.status.toUpperCase()}${suffix}`);
-  cat.subs.forEach(sub => {
+  if (withSubs) cat.subs.forEach(sub => {
     lines.push(`  - ${label(sub.code, sub.name)}: ${STATUS_MAP[sub.status] || sub.status.toUpperCase()}`);
   });
   lines.push("");
@@ -601,19 +715,20 @@ function renderText(headerLines, categories, rules = []) {
   out.push("");
   out.push(...(failing.length ? failing : ["None"]));
   if (hasErrors(categories) || rules.length) out.push("", "WARNING: " + CERTIFICATION_WARNING, "");
-  out.push("", "PASSING or NOT SUPPORTED", "------------------------", "", ...passing, "");
+  out.push("", "PASSING or NO EVIDENCE", "----------------------", "", ...passing, "");
+  const withSubs = categories.filter(cat => cat.subs.length);
+  if (withSubs.length) out.push("SUBPARTS", "--------", "", ...withSubs.flatMap(cat => renderCategoryBlockText(cat, true)));
 
-  out.push("FAILING RULES", "-------------", "", ...(rules.length ? rules.map(r => `- ${r.name} | ${r.category} | Reported count: ${r.count}`) : ["None"]), "");
+  out.push("FAILING RULES", "-------------", "", ...(rules.length ? rules.map(r => `- ${r.name} | ${r.category} | Reported count: ${r.count}`) : ["None"]), "", `${RULE_CATALOG_TEXT} ${RULE_CATALOG_URL}`, "");
   return out.join("\n");
 }
 
-function renderCategoryRowsMd(cat) {
+function renderCategoryRowsMd(cat, withSubs = false) {
   const rows = [];
-  const expand = cat.subs.length > 0;
-  const note = expand ? " *(see details below)*" : "";
-  rows.push(`| ${label(cat.code, cat.name)} | ${STATUS_MAP[cat.status] || cat.status.toUpperCase()}${note} |`);
-  cat.subs.forEach(sub => {
-    rows.push(`| &nbsp;&nbsp;↳ ${label(sub.code, sub.name)} | ${STATUS_MAP[sub.status] || sub.status.toUpperCase()} |`);
+  const note = (!withSubs && cat.subs.length) ? ` *(${SUBPARTS_NOTE})*` : "";
+  rows.push(`| ${markdownCell(label(cat.code, cat.name))}${note} | ${STATUS_MAP[cat.status] || cat.status.toUpperCase()} | ${markdownCell(describe(cat.code))} |`);
+  if (withSubs) cat.subs.forEach(sub => {
+    rows.push(`| &nbsp;&nbsp;↳ ${markdownCell(label(sub.code, sub.name))} | ${STATUS_MAP[sub.status] || sub.status.toUpperCase()} | ${markdownCell(describe(sub.code))} |`);
   });
   return rows;
 }
@@ -646,14 +761,17 @@ function renderMarkdown(info, categories, rules = []) {
   if (!failing.length) {
     out.push("None");
   } else {
-    out.push("| Category | Status |");
-    out.push("|---|---|");
+    out.push("| Functional Part | Support | Description |");
+    out.push("|---|---|---|");
     out.push(...failing);
   }
   out.push("");
 
   if (hasErrors(categories) || rules.length) out.push("> **Warning:** " + CERTIFICATION_WARNING, "");
-  out.push("## Passing or Not Supported", "", "| Category | Status |", "|---|---|", ...passing, "");
+  out.push("## Passing or No Evidence", "", "| Functional Part | Support | Description |", "|---|---|---|", ...passing, "");
+  const withSubs = categories.filter(cat => cat.subs.length);
+  if (withSubs.length) out.push(`*${subpartsPointer(withSubs)}*`, "", "## Subparts", "", "| Functional Part | Support | Description |", "|---|---|---|", ...withSubs.flatMap(cat => renderCategoryRowsMd(cat, true)), "");
+  if (rules.length) out.push(`*${RULES_POINTER}*`, "");
   out.push(...rulesMarkdown(rules));
   return out.join("\n");
 }
@@ -662,32 +780,57 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
-function statusBadgeHtml(status) {
-  const text = STATUS_MAP[status] || status.toUpperCase();
-  const cls = status === "pass" ? "badge-pass"
-    : status === "fail" ? "badge-fail"
-    : status === "warning" ? "badge-warning"
-    : "badge-na";
-  return `<span class="badge ${cls}">${text}</span>`;
+// Status icons, styled after the Validation Service legend: green tick, red exclamation, amber warning triangle;
+// grey dash for "no evidence".
+const STATUS_ICONS = {
+  pass: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#dcf1e4"/><circle cx="8" cy="8" r="5" fill="#2e9e5b"/><path d="M5.6 8.1l1.6 1.6 3.2-3.3" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  fail: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#f9d2d2"/><circle cx="8" cy="8" r="5" fill="#d93a3a"/><path d="M8 5.3v3.3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="10.7" r="0.85" fill="#fff"/></svg>',
+  warning: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#fdf1c4"/><path d="M8 2.6l5.6 10H2.4z" fill="#f5c400" stroke="#f5c400" stroke-width="1" stroke-linejoin="round"/><path d="M8 6.4v3" stroke="#5a4500" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="#5a4500"/></svg>',
+  na: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#eeeeef"/><circle cx="8" cy="8" r="5" fill="#a3a6ab"/><path d="M5.7 8h4.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
+};
+
+// Tables show the icon only; the label stays in the markup (visually hidden) for screen readers, tooltips and copy-paste.
+function statusHtml(kind, text) {
+  return `<span class="st st-${kind}" title="${text}">${STATUS_ICONS[kind]}<span class="st-label">${text}</span></span>`;
 }
 
-function pushCategoryRowsHtml(cat, rows) {
-  const expand = cat.subs.length > 0;
-  const note = expand ? ' <span class="see-details">(see details below)</span>' : "";
-  rows.push(`<tr><td>${escapeHtml(label(cat.code, cat.name))}</td><td>${statusBadgeHtml(cat.status)}${note}</td></tr>`);
-  cat.subs.forEach(sub => {
-    rows.push(`<tr class="sub-row"><td class="sub-name">↳ ${escapeHtml(label(sub.code, sub.name))}</td><td>${statusBadgeHtml(sub.status)}</td></tr>`);
+const STATUS_LEGEND = [
+  ["pass", "PASS", "Consistently valid in the evaluated IFC files."],
+  ["fail", "FAIL", "Not consistently valid in the evaluated IFC files."],
+  ["warning", "WARNING", "Valid, but some industry best practices may have warnings. The tool is still compliant with IFC."],
+  ["na", "NO EVIDENCE", "Not observed in the evaluated IFC files. No judgment can be made."],
+];
+
+function legendHtml() {
+  return `<div class="pv-legend"><div class="pv-legend-title">Legend</div>${STATUS_LEGEND.map(([kind, text, desc]) =>
+    `<div class="pv-legend-item">${statusHtml(kind, text)}<span>${desc}</span></div>`).join("")}</div>`;
+}
+
+function statusIconHtml(status) {
+  const text = STATUS_MAP[status] || status.toUpperCase();
+  const kind = status === "pass" ? "pass"
+    : status === "fail" ? "fail"
+    : status === "warning" ? "warning"
+    : "na";
+  return statusHtml(kind, text);
+}
+
+function pushCategoryRowsHtml(cat, rows, withSubs = false) {
+  const note = (!withSubs && cat.subs.length) ? ` <span class="see-details">(${SUBPARTS_NOTE})</span>` : "";
+  rows.push(`<tr${withSubs ? ' class="parent-row"' : ""}><td>${escapeHtml(label(cat.code, cat.name))}${note}</td><td>${statusIconHtml(cat.status)}</td><td class="desc">${escapeHtml(describe(cat.code))}</td></tr>`);
+  if (withSubs) cat.subs.forEach(sub => {
+    rows.push(`<tr class="sub-row"><td class="sub-name">↳ ${escapeHtml(label(sub.code, sub.name))}</td><td>${statusIconHtml(sub.status)}</td><td class="desc">${escapeHtml(describe(sub.code))}</td></tr>`);
   });
 }
 
 function renderPreviewHtml(info, categories, rules = []) {
   let html = "";
   html += `<h1 class="pv-h1">Scorecard Summary</h1>`;
-  html += `<div class="pv-meta">`;
+  html += `<div class="pv-head"><div class="pv-meta">`;
   Object.entries(info).forEach(([k, v]) => {
     html += `<div><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</div>`;
   });
-  html += `</div>`;
+  html += `</div>${legendHtml()}</div>`;
   html += `<p class="pv-intro">Based on the IFC files observed as of the Last Data Refresh date indicated above, the following summarises the IFC features supported by the evaluated Application.</p>`;
 
   html += `<h2 class="pv-h2">Failing</h2>`;
@@ -696,16 +839,23 @@ function renderPreviewHtml(info, categories, rules = []) {
   if (failRows.length === 0) {
     html += `<p class="pv-none">None</p>`;
   } else {
-    html += `<table class="pv-table"><thead><tr><th>Category</th><th>Status</th></tr></thead><tbody>${failRows.join("")}</tbody></table>`;
+    html += `<table class="pv-table cat-table"><colgroup><col class="c-cat"><col class="c-status"><col class="c-desc"></colgroup><thead><tr><th>Functional Part</th><th>Support</th><th>Description</th></tr></thead><tbody>${failRows.join("")}</tbody></table>`;
   }
   if (hasErrors(categories) || rules.length) html += `<blockquote class="certification-warning"><strong>Warning:</strong> ${CERTIFICATION_WARNING}</blockquote>`;
-  html += `<h2 class="pv-h2">Passing or Not Supported</h2>`;
+  html += `<h2 class="pv-h2">Passing or No Evidence</h2>`;
   const passRows = [];
   categories.forEach(cat => { if (cat.status !== "fail") pushCategoryRowsHtml(cat, passRows); });
-  html += `<table class="pv-table"><thead><tr><th>Category</th><th>Status</th></tr></thead><tbody>${passRows.join("")}</tbody></table>`;
+  html += `<table class="pv-table cat-table"><colgroup><col class="c-cat"><col class="c-status"><col class="c-desc"></colgroup><thead><tr><th>Functional Part</th><th>Support</th><th>Description</th></tr></thead><tbody>${passRows.join("")}</tbody></table>`;
 
-  html += '<h2 class="pv-h2">Failing rules</h2>';
-  html += rules.length ? `<table class="pv-table"><thead><tr><th>Rule</th><th>Category</th><th>Reported count</th></tr></thead><tbody>${rules.map(r => `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td>${r.count}</td></tr>`).join("")}</tbody></table>` : '<p class="pv-none">None</p>';
+  const withSubs = categories.filter(cat => cat.subs.length);
+  const subRows = [];
+  withSubs.forEach(cat => pushCategoryRowsHtml(cat, subRows, true));
+  if (subRows.length) html += `<p class="pv-note">${escapeHtml(subpartsPointer(withSubs))}</p><h2 class="pv-h2 page-break">Subparts</h2><table class="pv-table cat-table"><colgroup><col class="c-cat"><col class="c-status"><col class="c-desc"></colgroup><thead><tr><th>Functional Part</th><th>Support</th><th>Description</th></tr></thead><tbody>${subRows.join("")}</tbody></table>`;
+
+  if (rules.length) html += `<p class="pv-note">${RULES_POINTER}</p>`;
+  html += `<h2 class="pv-h2${rules.length ? " page-break" : ""}">Failing rules</h2>`;
+  html += rules.length ? `<table class="pv-table"><thead><tr><th>Rule</th><th>Functional Part</th><th>Reported count</th></tr></thead><tbody>${rules.map(r => `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td>${r.count}</td></tr>`).join("")}</tbody></table>` : '<p class="pv-none">None</p>';
+  html += `<p class="pv-note">${RULE_CATALOG_TEXT} <a href="${RULE_CATALOG_URL}" rel="noopener noreferrer">${RULE_CATALOG_URL}</a></p>`;
   return html;
 }
 
@@ -837,13 +987,13 @@ function renderEditedMarkdown(markdown) {
     const textNodes = [];
     while (walker.nextNode()) textNodes.push(walker.currentNode);
     for (const node of textNodes) {
-      const match = node.textContent.match(/^(\s*)(NOT SUPPORTED|WARNING|PASS|FAIL)(?=\s|$)/);
+      // Older labels (NOT SUPPORTED, NO EVIDENCE OF SUPPORT) are still recognised, so earlier Markdown exports keep working.
+      const match = node.textContent.match(/^(\s*)(NO EVIDENCE OF SUPPORT|NO EVIDENCE|NOT SUPPORTED|WARNING|PASS|FAIL)(?=\s|$)/);
       if (!match) continue;
-      const badge = document.createElement("span");
-      const classes = { PASS: "badge-pass", FAIL: "badge-fail", WARNING: "badge-warning", "NOT SUPPORTED": "badge-na" };
-      badge.className = "badge " + classes[match[2]];
-      badge.textContent = match[2];
-      node.replaceWith(document.createTextNode(match[1]), badge, document.createTextNode(node.textContent.slice(match[0].length)));
+      const kinds = { PASS: "pass", FAIL: "fail", WARNING: "warning", "NO EVIDENCE": "na", "NO EVIDENCE OF SUPPORT": "na", "NOT SUPPORTED": "na" };
+      const holder = document.createElement("template");
+      holder.innerHTML = statusHtml(kinds[match[2]], match[2]);
+      node.replaceWith(document.createTextNode(match[1]), holder.content.firstChild, document.createTextNode(node.textContent.slice(match[0].length)));
       break;
     }
   }
@@ -853,6 +1003,41 @@ function renderEditedMarkdown(markdown) {
       row.className = "sub-row";
       name.className = "sub-name";
     }
+  }
+  // Functional part tables (Functional Part | Support | Description): same column layout as the generated preview.
+  for (const table of template.content.querySelectorAll("table")) {
+    const heads = [...table.querySelectorAll("thead th")].map(th => th.textContent.trim().toLowerCase());
+    if (!["category|status|description", "functional part|status|description", "functional part|support|description"].includes(heads.join("|"))) continue;
+    table.classList.add("cat-table");
+    table.insertAdjacentHTML("afterbegin", '<colgroup><col class="c-cat"><col class="c-status"><col class="c-desc"></colgroup>');
+    for (const td of table.querySelectorAll("tbody td:nth-child(3)")) td.className = "desc";
+    for (const em of table.querySelectorAll("tbody td:nth-child(1) em, tbody td:nth-child(2) em")) {
+      if (/^\(see /i.test(em.textContent.trim())) em.className = "see-details";
+    }
+  }
+  // In a table that has subpart rows, the other rows are their parents: style them as group headers.
+  for (const table of template.content.querySelectorAll("table.cat-table")) {
+    if (!table.querySelector("tr.sub-row")) continue;
+    for (const row of table.querySelectorAll("tbody tr:not(.sub-row)")) row.className = "parent-row";
+  }
+  // Metadata block (first paragraph that starts with a bold "Key:") gets the legend beside it.
+  const metaPara = [...template.content.querySelectorAll("p")].find(p => p.firstElementChild && p.firstElementChild.tagName === "STRONG" && /:\s*$/.test(p.firstElementChild.textContent) && p.firstChild === p.firstElementChild);
+  if (metaPara) {
+    const head = document.createElement("div");
+    head.className = "pv-head";
+    metaPara.replaceWith(head);
+    metaPara.className = "pv-meta";
+    head.appendChild(metaPara);
+    head.insertAdjacentHTML("beforeend", legendHtml());
+  }
+  // Page breaks before Subparts and Failing rules (Failing rules only when it has a table).
+  for (const h2 of template.content.querySelectorAll("h2")) {
+    const title = h2.textContent.trim().toLowerCase();
+    const next = h2.nextElementSibling;
+    if (title === "subparts" || (title === "failing rules" && next && next.tagName === "TABLE")) h2.classList.add("page-break");
+  }
+  for (const para of template.content.querySelectorAll("p")) {
+    if (/^(The Subparts table on the next page|The Failing rules table on the next page|For the full list of Validation Service rules)/.test(para.textContent.trim())) para.className = "pv-note";
   }
   for (const quote of template.content.querySelectorAll("blockquote")) {
     if (/^Warning:/i.test(quote.textContent.trim())) quote.className = "certification-warning";
