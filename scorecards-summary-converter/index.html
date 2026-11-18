@@ -272,6 +272,8 @@
   .pv-legend { font-size: 12px; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
   .pv-legend-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
   .pv-legend-item { display: flex; align-items: flex-start; gap: 8px; margin-top: 5px; line-height: 1.4; }
+  .pv-count { flex: none; min-width: 2ch; text-align: right; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+  .pv-legend-note { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border); font-style: italic; }
   .pv-table thead th { background: #e8eaed; color: #3c4043; border-bottom: 1px solid #d5d8dc; }
   .pv-table tr.parent-row td { font-weight: 600; background: #f6f6f7; }
   .pv-table tr.parent-row td.desc { font-weight: 400; }
@@ -298,7 +300,8 @@
   .ov-more { position: absolute; top: 6px; right: 7px; width: 13px; height: 13px; border: 1.5px solid #6b6e73; border-radius: 2px; font-size: 12px; line-height: 10px; font-weight: 700; color: #6b6e73; }
   .ov-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); }
   .ov-legend-item { display: flex; align-items: flex-start; gap: 10px; font-size: 11px; line-height: 1.35; color: var(--text-muted); }
-  .ov-swatch { flex: none; display: flex; align-items: center; justify-content: center; width: 34px; height: 26px; border-radius: 3px; }
+  .ov-swatch { flex: none; display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 48px; height: 26px; padding: 0 6px; box-sizing: border-box; border-radius: 3px; }
+  .ov-count { font-weight: 700; font-size: 12px; color: #202124; font-variant-numeric: tabular-nums; }
   .ov-swatch svg { width: 15px; height: 15px; }
 
   /* IFC Scorecards page: metadata panel + tiles */
@@ -309,7 +312,7 @@
   .ovm h3 { margin: 0 0 14px; font-size: 14px; font-weight: 700; }
   .ovm-list { display: grid; grid-template-columns: max-content 1fr; gap: 9px 12px; }
   .ovm-group { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; row-gap: 9px; align-content: start; }
-  .ovm-k { text-align: right; font-weight: 600; white-space: nowrap; }
+  .ovm-k { text-align: right; font-weight: 600; max-width: 13.5em; } /* long labels wrap, like on the web page */
   .ovm-sep { grid-column: 1 / -1; border-top: 1px solid var(--border); margin: 6px 0; }
   .ovm .ov-grid { margin-top: 0; }
   /* Preview narrower than the PDF page (small window): scorecard panel below the metadata, metadata groups side
@@ -367,6 +370,7 @@
     .print-doc .pv-legend { font-size: 8.5pt; padding: 7px 10px; }
     .print-doc .pv-legend-title { font-size: 7.5pt; }
     .print-doc .pv-legend-item { margin-top: 3px; gap: 6px; }
+    .print-doc .pv-legend-note { margin-top: 5px; padding-top: 4px; }
     .print-doc .pv-note { font-size: 8.5pt; break-before: avoid; page-break-before: avoid; }
     .print-doc .pv-h2.page-break { break-before: page; page-break-before: always; margin-top: 0; }
     /* IFC Scorecards page fills page 1 (210 mm - 24 mm top - 14 mm bottom margin); the summary starts on page 2. */
@@ -387,7 +391,8 @@
     .print-doc .ovm .ov-name { font-size: 7.5pt; }
     .print-doc .ovm .ov-legend { gap: 10pt; }
     .print-doc .ovm .ov-legend-item { font-size: 7pt; gap: 6pt; }
-    .print-doc .ovm .ov-swatch { width: 26pt; height: 19pt; }
+    .print-doc .ovm .ov-swatch { min-width: 34pt; height: 19pt; gap: 3pt; padding: 0 4pt; }
+    .print-doc .ov-count { font-size: 8.5pt; }
     .print-doc .see-details { font-size: 8pt; margin-top: 2px; }
     .print-doc tr, .print-doc blockquote, .print-doc pre, .print-doc li { break-inside: avoid; page-break-inside: avoid; }
     .print-doc h1, .print-doc h2, .print-doc h3, .print-doc h4 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
@@ -883,30 +888,64 @@ function overviewTilesHtml(categories) {
   }).join("");
 }
 
-function overviewLegendHtml() {
+// Legend under the tiles; next to each icon, how many tiles on the page have that status.
+function overviewLegendHtml(categories) {
+  const counts = { pass: 0, fail: 0, warning: 0, na: 0 };
+  categories.filter(cat => !cat.added).forEach(cat => { counts[statusKind(cat.status)]++; });
   return `<div class="ov-legend">${STATUS_LEGEND.map(([kind, , desc]) =>
-    `<div class="ov-legend-item"><span class="ov-swatch ov-${kind}">${svgIcon(STATUS_GLYPHS[kind])}</span><span>${desc}</span></div>`).join("")}</div>`;
+    `<div class="ov-legend-item"><span class="ov-swatch ov-${kind}">${svgIcon(STATUS_GLYPHS[kind])}<span class="ov-count">${counts[kind]}</span></span><span>${desc}</span></div>`).join("")}</div>`;
 }
 
 // First page, "IFC Scorecards": the scorecard as on the Validation Service web page, with the "Authoring Tool"
 // metadata panel on the left and the legend under the tiles. Two groups in the web page's order and wording; keys not listed here go at the end of the first group.
 const OV_META_GROUPS = [
   [["Company"], ["Application"], ["Version"], ["Last Data Refresh"], ["Total Evaluated File(s)"], ["Any Pending Quarantine?", "Pending Quarantine"]],
-  [["Selected File(s)", "Selected Evaluated File(s)"], ["Validation Service Version"], ["IFC Schema Version"]],
+  [["Selected File(s)", "Selected Evaluated File(s)"], ["Validation Service Version"], ["IFC Schema Version"],
+   ["Digital Application Authentication only", "Digital Application Authentication"], ["Recognized MVD only", "Recognized MVD"]],
 ];
+
+// TRUE/FALSE values are shown as Yes/No, like Pending Quarantine.
+function metaValueHtml(value) {
+  const v = String(value).trim();
+  return escapeHtml(/^true$/i.test(v) ? "Yes" : /^false$/i.test(v) ? "No" : v);
+}
+
 function scorecardsPageHtml(info, categories) {
   const known = new Set(OV_META_GROUPS.flat().map(([k]) => k));
   const extra = Object.keys(info).filter(k => !known.has(k)).map(k => [k]);
-  const row = ([k, label]) => k in info ? `<span class="ovm-k">${escapeHtml(label || k)}</span><span class="ovm-v">${escapeHtml(info[k])}</span>` : "";
+  const row = ([k, label]) => k in info ? `<span class="ovm-k">${escapeHtml(label || k)}</span><span class="ovm-v">${metaValueHtml(info[k])}</span>` : "";
   const list = [OV_META_GROUPS[0].concat(extra), OV_META_GROUPS[1]].map(g => `<div class="ovm-group">${g.map(row).join("")}</div>`).join('<div class="ovm-sep"></div>');
   return `<section class="ov ovm"><h1 class="pv-h1">IFC Scorecards</h1><div class="ovm-body">` +
     `<div class="ovm-meta"><h3>Authoring Tool</h3><div class="ovm-list">${list}</div></div>` +
-    `<div class="ovm-main"><h3>Scorecard</h3><div class="ov-grid">${overviewTilesHtml(categories)}</div>${overviewLegendHtml()}</div></div></section>`;
+    `<div class="ovm-main"><h3>Scorecard</h3><div class="ov-grid">${overviewTilesHtml(categories)}</div>${overviewLegendHtml(categories)}</div></div></section>`;
 }
 
+// Summary box next to the metadata (Scorecard Summary). The counts are filled in by fillSummaryCounts() from the
+// tables themselves, so they also follow edits made in the Markdown tab.
 function legendHtml() {
-  return `<div class="pv-legend"><div class="pv-legend-title">Legend</div>${STATUS_LEGEND.map(([kind, text, desc]) =>
-    `<div class="pv-legend-item">${statusHtml(kind, text)}<span>${desc}</span></div>`).join("")}</div>`;
+  return `<div class="pv-legend"><div class="pv-legend-title">Summary</div>${STATUS_LEGEND.map(([kind, text, desc]) =>
+    `<div class="pv-legend-item" data-kind="${kind}">${statusHtml(kind, text)}<span class="pv-count">0</span><span>${desc}</span></div>`).join("")}` +
+    `<div class="pv-legend-note"></div></div>`;
+}
+
+// Count every row of the functional-part tables once: parts and subparts. Parent rows in the Subparts table
+// repeat a part already counted in the Failing / Passing tables, so they are skipped.
+function fillSummaryCounts(root) {
+  const box = root.querySelector(".pv-legend");
+  if (!box) return;
+  const counts = { pass: 0, fail: 0, warning: 0, na: 0 };
+  let parts = 0, subs = 0;
+  for (const row of root.querySelectorAll("table.cat-table tbody tr:not(.parent-row)")) {
+    const st = row.querySelector(".st");
+    if (!st) continue;
+    const kind = ["pass", "fail", "warning", "na"].find(k => st.classList.contains("st-" + k));
+    counts[kind]++;
+    if (row.classList.contains("sub-row")) subs++; else parts++;
+  }
+  for (const item of box.querySelectorAll(".pv-legend-item")) item.querySelector(".pv-count").textContent = counts[item.dataset.kind];
+  box.querySelector(".pv-legend-note").textContent =
+    `Counts include subparts: ${parts} functional parts and ${subs} subparts, ${parts + subs} in total. ` +
+    `The scorecard on page 1 counts only the functional parts it shows, without subparts, so its numbers are lower.`;
 }
 
 function statusIconHtml(status) {
@@ -955,7 +994,25 @@ function renderPreviewHtml(info, categories, rules = []) {
   html += `<h2 class="pv-h2${rules.length ? " page-break" : ""}">Failing rules</h2>`;
   html += rules.length ? `<table class="pv-table"><thead><tr><th>Rule</th><th>Functional Part</th><th>Reported count</th></tr></thead><tbody>${rules.map(r => `<tr><td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.category)}</td><td>${r.count}</td></tr>`).join("")}</tbody></table>` : '<p class="pv-none">None</p>';
   html += `<p class="pv-note">${RULE_CATALOG_TEXT} <a href="${RULE_CATALOG_URL}" rel="noopener noreferrer">${RULE_CATALOG_URL}</a></p>`;
-  return html;
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  fillSummaryCounts(template.content);
+  return template.innerHTML;
+}
+
+// Default PDF file name: Scorecards_<Company>_<Application>_<Version>_<Last Data Refresh>.
+// Fields are separated by "_"; spaces inside a field become "-" (e.g. cadwork-Informatik-CI-AG).
+// The date is written as YYYY-MM-DD when it can be read (e.g. "29 Sept 2026" -> 2026-09-29), so files sort by date.
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+function isoDate(text) {
+  const m = String(text || "").match(/(\d{1,2})\s+([A-Za-z]+)\.?\s+(\d{4})/);
+  const month = m && MONTHS[m[2].slice(0, 3).toLowerCase()];
+  return month ? `${m[3]}-${String(month).padStart(2, "0")}-${m[1].padStart(2, "0")}` : text;
+}
+function pdfFileName(info) {
+  const field = v => String(v || "").trim().replace(/\s+/g, "-").replace(/[^\w\-.]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return ["Scorecards", info["Company"], info["Application"], info["Version"], isoDate(info["Last Data Refresh"])]
+    .map(field).filter(Boolean).join("_");
 }
 
 function safeSlug(...parts) {
@@ -985,7 +1042,7 @@ function convertFullText(fullText) {
     const metaInfo = pending ? { ...info, "Any Pending Quarantine?": pending[1].trim() } : info;
     const overview = scorecardsPageHtml(metaInfo, categories);
     const previewHtml = overview + renderPreviewHtml(info, categories, rules);
-    results.push({ info, text, md, previewHtml, overview, fnameBase });
+    results.push({ info, text, md, previewHtml, overview, fnameBase, pdfName: pdfFileName(info) });
   });
   return results;
 }
@@ -1144,6 +1201,7 @@ function renderEditedMarkdown(markdown) {
   for (const quote of template.content.querySelectorAll("blockquote")) {
     if (/^Warning:/i.test(quote.textContent.trim())) quote.className = "certification-warning";
   }
+  fillSummaryCounts(template.content);
   return template.innerHTML;
 }
 
@@ -1231,7 +1289,7 @@ const DEFAULT_TITLE = document.title;
 
 function exportPdf(r) {
   printArea.innerHTML = `<div class="print-doc">${r.previewHtml}</div>`;
-  document.title = r.fnameBase;
+  document.title = r.pdfName; // the browser suggests the page title as the PDF file name
   window.print();
 }
 
