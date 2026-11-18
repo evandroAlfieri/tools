@@ -276,6 +276,34 @@
     font-style: italic;
   }
 
+  /* IFC Scorecards page (first page): tiles */
+  .ov-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 1fr; gap: 8px; margin-top: 12px; } /* 1fr rows: every row as tall as the tallest */
+  .ov-tile { position: relative; display: flex; flex-direction: column; justify-content: center; border-radius: 4px; padding: 14px 8px 12px; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+  .ov-wide { grid-column: span 2; }
+  .ov-pass { background: #d9f2de; }
+  .ov-fail { background: #f9cfcf; }
+  .ov-warning { background: #fdf1c4; }
+  .ov-na { background: #e2e3e5; }
+  .ov-code { display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; font-size: 12px; letter-spacing: 0.02em; }
+  .ov-code svg { width: 18px; height: 18px; }
+  .ov-name { margin-top: 6px; font-size: 11.5px; line-height: 1.25; }
+  .ov-more { position: absolute; top: 6px; right: 7px; width: 13px; height: 13px; border: 1.5px solid #6b6e73; border-radius: 2px; font-size: 12px; line-height: 10px; font-weight: 700; color: #6b6e73; }
+  .ov-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .ov-legend-item { display: flex; align-items: flex-start; gap: 10px; font-size: 11px; line-height: 1.35; color: var(--text-muted); }
+  .ov-swatch { flex: none; display: flex; align-items: center; justify-content: center; width: 34px; height: 26px; border-radius: 3px; }
+  .ov-swatch svg { width: 15px; height: 15px; }
+
+  /* IFC Scorecards page: metadata panel + tiles */
+  .ov { margin-bottom: 28px; }
+  .ovm-body { display: grid; grid-template-columns: 30% 1fr; border: 1px solid var(--border); border-radius: 6px; margin-top: 12px; }
+  .ovm-meta { padding: 16px 18px; border-right: 1px solid var(--border); font-size: 12px; }
+  .ovm-main { padding: 16px 18px; display: flex; flex-direction: column; }
+  .ovm h3 { margin: 0 0 14px; font-size: 14px; font-weight: 700; }
+  .ovm-list { display: grid; grid-template-columns: max-content 1fr; gap: 9px 12px; }
+  .ovm-k { text-align: right; font-weight: 600; white-space: nowrap; }
+  .ovm-sep { grid-column: 1 / -1; border-top: 1px solid var(--border); margin: 6px 0; }
+  .ovm .ov-grid { margin-top: 0; }
+
   #printArea { display: none; }
   .print-doc { padding: 8px 4px; }
   /* Page setup for the PDF: landscape A4, buildingSMART logo top-left and "n of N" bottom-right on every page.
@@ -319,6 +347,24 @@
     .print-doc .pv-legend-item { margin-top: 3px; gap: 6px; }
     .print-doc .pv-note { font-size: 8.5pt; break-before: avoid; page-break-before: avoid; }
     .print-doc .pv-h2.page-break { break-before: page; page-break-before: always; margin-top: 0; }
+    /* IFC Scorecards page fills page 1 (210 mm - 24 mm top - 14 mm bottom margin); the summary starts on page 2. */
+    .print-doc .ov { display: flex; flex-direction: column; height: 170mm; margin-bottom: 0; break-after: page; page-break-after: always; }
+    .print-doc .ov-tile { box-shadow: none; border: 0.75pt solid rgba(0,0,0,0.08); }
+    .print-doc .ov-code svg { width: 12pt; height: 12pt; }
+    .print-doc .ov-name { margin-top: 4pt; }
+    .print-doc .ov-legend { margin-top: auto; }
+    .print-doc .ovm-body { flex: 1; min-height: 0; }
+    .print-doc .ovm-meta { font-size: 8pt; padding: 10pt 12pt; }
+    .print-doc .ovm-main { padding: 10pt 12pt; }
+    .print-doc .ovm h3 { font-size: 10pt; margin-bottom: 10pt; }
+    .print-doc .ovm-list { gap: 6pt 8pt; }
+    .print-doc .ovm .ov-grid { gap: 5pt; }
+    .print-doc .ovm .ov-tile { padding: 8pt 4pt 7pt; }
+    .print-doc .ovm .ov-code { font-size: 8pt; }
+    .print-doc .ovm .ov-name { font-size: 7.5pt; }
+    .print-doc .ovm .ov-legend { gap: 10pt; }
+    .print-doc .ovm .ov-legend-item { font-size: 7pt; gap: 6pt; }
+    .print-doc .ovm .ov-swatch { width: 26pt; height: 19pt; }
     .print-doc .see-details { font-size: 8pt; margin-top: 2px; }
     .print-doc tr, .print-doc blockquote, .print-doc pre, .print-doc li { break-inside: avoid; page-break-inside: avoid; }
     .print-doc h1, .print-doc h2, .print-doc h3, .print-doc h4 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
@@ -591,7 +637,7 @@ function normalizeCategories(categories) {
   for (const [code, name] of CANONICAL_FUNCTIONAL) {
     seen.add(code);
     if (byCode[code]) merged.push(byCode[code]);
-    else merged.push({ code, name, status: "not applicable", subs: [] });
+    else merged.push({ code, name, status: "not applicable", subs: [], added: true }); // not in the export
   }
   const extras = Object.keys(byCode)
     .filter(code => !seen.has(code))
@@ -774,14 +820,18 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
 }
 
-// Status icons, styled after the Validation Service legend: green tick, red exclamation, amber warning triangle;
-// grey dash for "no evidence".
-const STATUS_ICONS = {
-  pass: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#dcf1e4"/><circle cx="8" cy="8" r="5" fill="#2e9e5b"/><path d="M5.6 8.1l1.6 1.6 3.2-3.3" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  fail: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#f9d2d2"/><circle cx="8" cy="8" r="5" fill="#d93a3a"/><path d="M8 5.3v3.3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="10.7" r="0.85" fill="#fff"/></svg>',
-  warning: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#fdf1c4"/><path d="M8 2.6l5.6 10H2.4z" fill="#f5c400" stroke="#f5c400" stroke-width="1" stroke-linejoin="round"/><path d="M8 6.4v3" stroke="#5a4500" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="#5a4500"/></svg>',
-  na: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect width="16" height="16" rx="3" fill="#eeeeef"/><circle cx="8" cy="8" r="5" fill="#a3a6ab"/><path d="M5.7 8h4.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>',
+// Status glyphs, styled after the Validation Service legend: green tick, red exclamation, amber warning triangle;
+// grey dash for "no evidence". Used on a small tile in tables and the legend, and bare on the overview tiles.
+const STATUS_GLYPHS = {
+  pass: '<circle cx="8" cy="8" r="5" fill="#2e9e5b"/><path d="M5.6 8.1l1.6 1.6 3.2-3.3" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
+  fail: '<circle cx="8" cy="8" r="5" fill="#d93a3a"/><path d="M8 5.3v3.3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="10.7" r="0.85" fill="#fff"/>',
+  warning: '<path d="M8 2.6l5.6 10H2.4z" fill="#f5c400" stroke="#f5c400" stroke-width="1" stroke-linejoin="round"/><path d="M8 6.4v3" stroke="#5a4500" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="11" r="0.75" fill="#5a4500"/>',
+  na: '<circle cx="8" cy="8" r="5" fill="#a3a6ab"/><path d="M5.7 8h4.6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>',
 };
+const STATUS_TILE_BG = {"pass": "#dcf1e4", "fail": "#f9d2d2", "warning": "#fdf1c4", "na": "#eeeeef"};
+const svgIcon = inner => `<svg viewBox="0 0 16 16" aria-hidden="true">${inner}</svg>`;
+const STATUS_ICONS = Object.fromEntries(Object.entries(STATUS_GLYPHS).map(([kind, glyph]) =>
+  [kind, svgIcon(`<rect width="16" height="16" rx="3" fill="${STATUS_TILE_BG[kind]}"/>${glyph}`)]));
 
 // Tables show the icon only; the label stays in the markup (visually hidden) for screen readers, tooltips and copy-paste.
 function statusHtml(kind, text) {
@@ -795,6 +845,42 @@ const STATUS_LEGEND = [
   ["na", "NO EVIDENCE", "Not observed in the evaluated IFC files. No judgment can be made."],
 ];
 
+function statusKind(status) {
+  return status === "pass" ? "pass" : status === "fail" ? "fail" : status === "warning" ? "warning" : "na";
+}
+
+// Scorecard tiles: the parts listed in the export (not the ones the tool adds as NO EVIDENCE to complete the tables).
+function overviewTilesHtml(categories) {
+  return categories.filter(cat => !cat.added).map(cat => {
+    const kind = statusKind(cat.status);
+    const wide = cat.code === "SYNTAX" || cat.code === "SCHEMA" ? " ov-wide" : "";
+    const more = cat.subs.length ? '<span class="ov-more" title="See Subparts table">+</span>' : "";
+    return `<div class="ov-tile ov-${kind}${wide}">${more}<div class="ov-code">${svgIcon(STATUS_GLYPHS[kind])}<span>${escapeHtml(cat.code)}</span></div>` +
+      `<div class="ov-name">${escapeHtml(cat.name)}</div><span class="st-label">${STATUS_MAP[cat.status] || cat.status.toUpperCase()}</span></div>`;
+  }).join("");
+}
+
+function overviewLegendHtml() {
+  return `<div class="ov-legend">${STATUS_LEGEND.map(([kind, , desc]) =>
+    `<div class="ov-legend-item"><span class="ov-swatch ov-${kind}">${svgIcon(STATUS_GLYPHS[kind])}</span><span>${desc}</span></div>`).join("")}</div>`;
+}
+
+// First page, "IFC Scorecards": the scorecard as on the Validation Service web page, with the "Authoring Tool"
+// metadata panel on the left and the legend under the tiles. Two groups in the web page's order and wording; keys not listed here go at the end of the first group.
+const OV_META_GROUPS = [
+  [["Company"], ["Application"], ["Version"], ["Last Data Refresh"], ["Total Evaluated File(s)"], ["Any Pending Quarantine?", "Pending Quarantine"]],
+  [["Selected File(s)", "Selected Evaluated File(s)"], ["Validation Service Version"], ["IFC Schema Version"]],
+];
+function scorecardsPageHtml(info, categories) {
+  const known = new Set(OV_META_GROUPS.flat().map(([k]) => k));
+  const extra = Object.keys(info).filter(k => !known.has(k)).map(k => [k]);
+  const row = ([k, label]) => k in info ? `<span class="ovm-k">${escapeHtml(label || k)}</span><span class="ovm-v">${escapeHtml(info[k])}</span>` : "";
+  const list = [OV_META_GROUPS[0].concat(extra), OV_META_GROUPS[1]].map(g => g.map(row).join("")).join('<div class="ovm-sep"></div>');
+  return `<section class="ov ovm"><h1 class="pv-h1">IFC Scorecards</h1><div class="ovm-body">` +
+    `<div class="ovm-meta"><h3>Authoring Tool</h3><div class="ovm-list">${list}</div></div>` +
+    `<div class="ovm-main"><h3>Scorecard</h3><div class="ov-grid">${overviewTilesHtml(categories)}</div>${overviewLegendHtml()}</div></div></section>`;
+}
+
 function legendHtml() {
   return `<div class="pv-legend"><div class="pv-legend-title">Legend</div>${STATUS_LEGEND.map(([kind, text, desc]) =>
     `<div class="pv-legend-item">${statusHtml(kind, text)}<span>${desc}</span></div>`).join("")}</div>`;
@@ -802,11 +888,7 @@ function legendHtml() {
 
 function statusIconHtml(status) {
   const text = STATUS_MAP[status] || status.toUpperCase();
-  const kind = status === "pass" ? "pass"
-    : status === "fail" ? "fail"
-    : status === "warning" ? "warning"
-    : "na";
-  return statusHtml(kind, text);
+  return statusHtml(statusKind(status), text);
 }
 
 function pushCategoryRowsHtml(cat, rows, withSubs = false) {
@@ -876,8 +958,11 @@ function convertFullText(fullText) {
     const app = info["Application"] || "scorecard";
 
     const fnameBase = safeSlug(app, `vsv${vsv}`, schema, `${selfiles}files`);
-    const previewHtml = renderPreviewHtml(info, categories, rules);
-    results.push({ info, text, md, previewHtml, fnameBase });
+    const pending = headerLines.map(l => l.match(/^\s*Any Pending Quarantine\?\s*:?\s*(.*)$/)).find(Boolean);
+    const metaInfo = pending ? { ...info, "Any Pending Quarantine?": pending[1].trim() } : info;
+    const overview = scorecardsPageHtml(metaInfo, categories);
+    const previewHtml = overview + renderPreviewHtml(info, categories, rules);
+    results.push({ info, text, md, previewHtml, overview, fnameBase });
   });
   return results;
 }
@@ -1077,7 +1162,7 @@ function renderResults(results) {
     markdownEditor.value = r.md;
     markdownEditor.addEventListener("input", () => {
       r.md = markdownEditor.value;
-      r.previewHtml = renderEditedMarkdown(r.md);
+      r.previewHtml = r.overview + renderEditedMarkdown(r.md);
       card.querySelector('[data-panel="preview"] .pv-body').innerHTML = r.previewHtml;
     });
     card.querySelector('[data-panel="preview"] .pv-body').innerHTML = r.previewHtml;
