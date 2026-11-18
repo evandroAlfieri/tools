@@ -268,7 +268,9 @@
 
   #printArea { display: none; }
   .print-doc { padding: 8px 4px; }
+  @page { size: A4; margin: 18mm 16mm; }
   @media print {
+    html, body { background: #fff; }
     body * { visibility: hidden; }
     #printArea, #printArea * { visibility: visible; }
     #printArea {
@@ -279,7 +281,12 @@
       width: 100%;
       padding: 0;
     }
-    .pv-table tr { page-break-inside: avoid; }
+    .print-doc { padding: 0; }
+    .print-doc tr, .print-doc blockquote, .print-doc pre, .print-doc li { break-inside: avoid; page-break-inside: avoid; }
+    .print-doc h1, .print-doc h2, .print-doc h3, .print-doc h4 { break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+    .print-doc thead { display: table-header-group; }
+    .print-doc p { orphans: 3; widows: 3; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
   footer {
     text-align: center;
@@ -882,7 +889,7 @@ function renderResults(results) {
         <button data-action="copy">Copy</button>
         <button data-action="download-txt">Download .txt</button>
         <button data-action="download-md">Download .md</button>
-        <button data-action="export-pdf" title="Opens your browser's print dialog — choose &quot;Save as PDF&quot;">Export PDF</button>
+        <button data-action="export-pdf" title="Opens your browser's print dialog — set the destination to &quot;Save as PDF&quot;">Save as PDF</button>
       </div>
     `;
 
